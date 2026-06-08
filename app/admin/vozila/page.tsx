@@ -305,12 +305,12 @@ export default function AdminVehicles() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label>Marka *</Label>
-                <Input {...register("brand")} placeholder="BMW" />
+                <Input {...register("brand")} placeholder="npr. BMW" />
                 {errors.brand && <p className="text-xs text-red-500">{errors.brand.message}</p>}
               </div>
               <div className="space-y-1">
                 <Label>Model *</Label>
-                <Input {...register("model")} placeholder="X5" />
+                <Input {...register("model")} placeholder="npr. X5" />
                 {errors.model && <p className="text-xs text-red-500">{errors.model.message}</p>}
               </div>
             </div>
@@ -393,15 +393,15 @@ export default function AdminVehicles() {
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1">
                 <Label>Boja</Label>
-                <Input {...register("color")} placeholder="Bijela" />
+                <Input {...register("color")} placeholder="npr. Bijela" />
               </div>
               <div className="space-y-1">
                 <Label>Motor</Label>
-                <Input {...register("engine_size")} placeholder="2.0 TDI" />
+                <Input {...register("engine_size")} placeholder="npr. 2.0 TDI" />
               </div>
               <div className="space-y-1">
                 <Label>Snaga</Label>
-                <Input {...register("power")} placeholder="150 KS" />
+                <Input {...register("power")} placeholder="npr. 150 KS" />
               </div>
             </div>
             <div className="grid grid-cols-3 gap-3">
@@ -415,7 +415,7 @@ export default function AdminVehicles() {
               </div>
               <div className="space-y-1">
                 <Label>Karoserija</Label>
-                <Input {...register("body_type")} placeholder="SUV" />
+                <Input {...register("body_type")} placeholder="npr. SUV" />
               </div>
             </div>
             <div className="space-y-1">

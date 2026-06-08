@@ -4,18 +4,44 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Testimonial } from "@/types/database";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Star, Trash2 } from "lucide-react";
+import { Star, Trash2, Plus } from "lucide-react";
+import { useForm, Controller, type Resolver } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { toast } from "sonner";
+
+const schema = z.object({
+  customer_name: z.string().min(1, "Obavezno"),
+  rating: z.coerce.number().min(1).max(5),
+  text: z.string().min(1, "Obavezno"),
+  vehicle_purchased: z.string().optional(),
+  date: z.string().optional(),
+  is_approved: z.boolean(),
+  is_featured: z.boolean(),
+});
+
+type FormData = z.infer<typeof schema>;
 
 export default function AdminTestimonials() {
   const supabase = createClient();
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<FormData>({
+    resolver: zodResolver(schema) as Resolver<FormData>,
+    defaultValues: { rating: 5, is_approved: true, is_featured: false },
+  });
 
   const load = async () => {
     const { data } = await supabase.from("testimonials").select("*").order("created_at", { ascending: false });
@@ -24,6 +50,27 @@ export default function AdminTestimonials() {
   };
 
   useEffect(() => { load(); }, []);
+
+  const openNew = () => {
+    reset({ rating: 5, is_approved: true, is_featured: false });
+    setOpen(true);
+  };
+
+  const onSubmit = async (data: FormData) => {
+    setSaving(true);
+    const payload = {
+      ...data,
+      vehicle_purchased: data.vehicle_purchased || null,
+      date: data.date || new Date().toISOString().split("T")[0],
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await supabase.from("testimonials").insert(payload as any);
+    setSaving(false);
+    if (error) { toast.error("Greška pri čuvanju"); return; }
+    toast.success("Recenzija dodana");
+    setOpen(false);
+    load();
+  };
 
   const toggle = async (id: string, field: "is_approved" | "is_featured", value: boolean) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -42,9 +89,14 @@ export default function AdminTestimonials() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-black">Recenzije</h1>
-        <p className="text-sm text-muted-foreground">{testimonials.length} recenzija ukupno</p>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-black">Recenzije</h1>
+          <p className="text-sm text-muted-foreground">{testimonials.length} recenzija ukupno</p>
+        </div>
+        <Button onClick={openNew} className="gap-2">
+          <Plus className="w-4 h-4" /> Dodaj recenziju
+        </Button>
       </div>
 
       {loading ? (
@@ -93,6 +145,69 @@ export default function AdminTestimonials() {
           ))}
         </div>
       )}
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Dodaj recenziju</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-1">
+              <Label>Ime kupca *</Label>
+              <Input {...register("customer_name")} placeholder="npr. Amar Hodžić" />
+              {errors.customer_name && <p className="text-xs text-red-500">{errors.customer_name.message}</p>}
+            </div>
+            <div className="space-y-1">
+              <Label>Ocjena *</Label>
+              <Controller name="rating" control={control} render={({ field }) => (
+                <Select onValueChange={(v) => field.onChange(Number(v))} value={String(field.value)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {[5, 4, 3, 2, 1].map((n) => (
+                      <SelectItem key={n} value={String(n)}>
+                        {"★".repeat(n)}{"☆".repeat(5 - n)} ({n}/5)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )} />
+            </div>
+            <div className="space-y-1">
+              <Label>Tekst recenzije *</Label>
+              <Textarea {...register("text")} rows={3} placeholder="Odlična usluga, preporučujem..." />
+              {errors.text && <p className="text-xs text-red-500">{errors.text.message}</p>}
+            </div>
+            <div className="space-y-1">
+              <Label>Kupljeno vozilo</Label>
+              <Input {...register("vehicle_purchased")} placeholder="npr. BMW X5 2022" />
+            </div>
+            <div className="space-y-1">
+              <Label>Datum</Label>
+              <Input {...register("date")} type="date" />
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Controller name="is_approved" control={control} render={({ field }) => (
+                  <Switch checked={field.value} onCheckedChange={field.onChange} id="approved" />
+                )} />
+                <Label htmlFor="approved">Odobri odmah</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Controller name="is_featured" control={control} render={({ field }) => (
+                  <Switch checked={field.value} onCheckedChange={field.onChange} id="featured" />
+                )} />
+                <Label htmlFor="featured">Istakni</Label>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button type="submit" disabled={saving} className="flex-1">
+                {saving ? "Čuvanje..." : "Dodaj recenziju"}
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Odustani</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

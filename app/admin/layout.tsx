@@ -17,7 +17,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, []);
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    <div className="dark flex h-screen bg-background overflow-hidden">
       {/* Desktop sidebar */}
       <div className="hidden md:flex shrink-0">
         <AdminSidebar userEmail={userEmail} />

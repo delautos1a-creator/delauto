@@ -47,13 +47,12 @@ export default function AdminSidebar({ mobile, onClose, userEmail }: Props) {
       {/* Header */}
       <div className="p-4 border-b border-border flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-            <Car className="w-4 h-4 text-primary-foreground" />
-          </div>
-          <div>
-            <div className="font-black text-sm leading-none">Del Auto</div>
-            <div className="text-xs text-muted-foreground">Admin panel</div>
-          </div>
+          <img
+            src="/delauto-logo.png"
+            alt="Del Auto D.O.O."
+            className="h-10 w-auto object-contain brightness-0 invert"
+          />
+          <div className="text-xs text-muted-foreground leading-none pt-0.5">Admin</div>
         </div>
         {mobile && onClose && (
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground">

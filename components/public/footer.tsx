@@ -1,49 +1,132 @@
 import Link from "next/link";
-import { Car } from "lucide-react";
+
+function InstagramIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+    </svg>
+  );
+}
+
+function OlxIcon() {
+  return (
+    <span className="text-[11px] font-black tracking-tight leading-none">OLX</span>
+  );
+}
+
+const VOZILA_LINKS = [
+  { label: "Najnovija vozila", href: "/vozila" },
+  { label: "Uskoro dostupna", href: "/uskoro" },
+  { label: "Rezervisana vozila", href: "/vozila" },
+];
+
+const USLUGE_LINKS = [
+  { label: "Test vožnja", href: "/kontakt" },
+  { label: "Naše operacije", href: "/operacije" },
+  { label: "Vijesti i blog", href: "/vijesti" },
+];
+
+const KOMPANIJA_LINKS = [
+  { label: "O nama", href: "/o-nama" },
+  { label: "Kontakt", href: "/kontakt" },
+];
 
 export default function Footer() {
   return (
-    <footer className="border-t border-border bg-card mt-auto">
-      <div className="max-w-7xl mx-auto px-4 py-10">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-          <div>
-            <Link href="/" className="flex items-center gap-2 font-black text-lg mb-3">
-              <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
-                <Car className="w-3.5 h-3.5 text-primary-foreground" />
-              </div>
-              Del Auto
+    <footer className="bg-navy text-white">
+      <div className="max-w-7xl mx-auto px-4 py-14">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
+          {/* Brand column */}
+          <div className="md:col-span-1">
+            <Link href="/" className="inline-block mb-4">
+              <img
+                src="/delauto-logo.png"
+                alt="Del Auto D.O.O."
+                className="h-12 w-auto object-contain rounded-md"
+              />
             </Link>
-            <p className="text-sm text-muted-foreground">
-              Specijalizovani uvoznik i prodavač premium vozila. Sarajevo, BiH.
+            <p className="text-sm text-white/55 mb-5 leading-relaxed">
+              Pouzdan uvoz vozila iz Francuske. Garantovano provjereni kilometri — vaš pouzdani
+              partner za kupovinu automobila u Sarajevu.
             </p>
+            <div className="flex gap-2.5">
+              <a
+                href="https://www.instagram.com/delauto_sarajevo/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-white/10 hover:bg-primary hover:text-primary-foreground flex items-center justify-center transition-colors"
+                aria-label="Instagram"
+              >
+                <InstagramIcon />
+              </a>
+              <a
+                href="https://olx.ba/shops/DelAuto/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-white/10 hover:bg-primary hover:text-primary-foreground flex items-center justify-center transition-colors"
+                aria-label="OLX"
+              >
+                <OlxIcon />
+              </a>
+            </div>
           </div>
+
+          {/* Vozila */}
           <div>
-            <h4 className="font-bold text-sm mb-3">Navigacija</h4>
-            <div className="space-y-2">
-              {[
-                { label: "Vozila", href: "/vozila" },
-                { label: "Uskoro", href: "/uskoro" },
-                { label: "Operacije", href: "/operacije" },
-                { label: "Vijesti", href: "/vijesti" },
-              ].map(({ label, href }) => (
-                <Link key={href} href={href} className="block text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <h4 className="font-bold text-sm mb-4 text-white">Vozila</h4>
+            <div className="space-y-2.5">
+              {VOZILA_LINKS.map(({ label, href }) => (
+                <Link
+                  key={label}
+                  href={href}
+                  className="block text-sm text-white/55 hover:text-white transition-colors"
+                >
                   {label}
                 </Link>
               ))}
             </div>
           </div>
+
+          {/* Usluge */}
           <div>
-            <h4 className="font-bold text-sm mb-3">Kontakt</h4>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <p>Sarajevo, BiH</p>
-              <p>info@delauto.ba</p>
-              <p>+387 61 000 000</p>
+            <h4 className="font-bold text-sm mb-4 text-white">Usluge</h4>
+            <div className="space-y-2.5">
+              {USLUGE_LINKS.map(({ label, href }) => (
+                <Link
+                  key={label}
+                  href={href}
+                  className="block text-sm text-white/55 hover:text-white transition-colors"
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Kompanija */}
+          <div>
+            <h4 className="font-bold text-sm mb-4 text-white">Kompanija</h4>
+            <div className="space-y-2.5">
+              {KOMPANIJA_LINKS.map(({ label, href }) => (
+                <Link
+                  key={label}
+                  href={href}
+                  className="block text-sm text-white/55 hover:text-white transition-colors"
+                >
+                  {label}
+                </Link>
+              ))}
             </div>
           </div>
         </div>
-        <div className="border-t border-border pt-6 flex flex-wrap gap-4 items-center justify-between text-xs text-muted-foreground">
-          <p>© {new Date().getFullYear()} Del Auto. Sva prava zadržana.</p>
-          <Link href="/admin" className="hover:text-foreground transition-colors">Admin panel</Link>
+
+        <div className="border-t border-white/10 pt-6 flex flex-wrap gap-4 items-center justify-between text-xs text-white/35">
+          <p>© {new Date().getFullYear()} Del Auto D.O.O. Sva prava zadržana.</p>
+          <Link href="/admin" className="hover:text-white/60 transition-colors">
+            Admin panel
+          </Link>
         </div>
       </div>
     </footer>

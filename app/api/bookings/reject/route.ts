@@ -44,34 +44,32 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Rezervacija nije pronađena." }, { status: 404 });
   }
 
-  await supabase.from("bookings").update({ status: "confirmed" } as any).eq("id", booking_id);
+  await supabase.from("bookings").update({ status: "cancelled" } as any).eq("id", booking_id);
 
   const b = booking as any;
 
   await sendBrevoEmail({
     to: b.customer_email,
-    subject: "Vaša test vožnja je potvrđena! ✅",
+    subject: "Zahtjev za test vožnju nije odobren — Del Auto",
     html: `
       <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
-        <img src="${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/delauto-logo.png"
-             alt="Del Auto" style="height:60px;margin-bottom:24px" />
-
-        <h2 style="color:#111">Test vožnja potvrđena ✅</h2>
+        <h2 style="color:#111">Zahtjev nije odobren</h2>
         <p style="color:#444">Poštovani/a <strong>${b.customer_name}</strong>,</p>
-        <p style="color:#444">Vaša rezervacija test vožnje je <strong>potvrđena</strong>. Radujemo se vašem dolasku!</p>
-
+        <p style="color:#444">
+          Nažalost, nismo u mogućnosti potvrditi vašu rezervaciju test vožnje za traženi termin.
+          Razlog može biti popunjenost rasporeda ili nedostupnost vozila.
+        </p>
         <div style="background:#f5f5f5;border-radius:12px;padding:20px;margin:24px 0">
-          <h3 style="margin:0 0 12px;color:#111">Detalji rezervacije</h3>
+          <h3 style="margin:0 0 12px;color:#111">Odbijeni zahtjev</h3>
           ${b.vehicle_name ? `<p style="margin:6px 0;color:#444"><strong>Vozilo:</strong> ${b.vehicle_name}</p>` : ""}
           <p style="margin:6px 0;color:#444"><strong>Datum:</strong> ${b.preferred_date}</p>
           <p style="margin:6px 0;color:#444"><strong>Vrijeme:</strong> ${b.preferred_time}</p>
-          <p style="margin:6px 0;color:#444"><strong>Lokacija:</strong> Del Auto D.O.O., Sarajevo</p>
         </div>
-
-        <p style="color:#444">Ukoliko imate pitanja, slobodno nas kontaktirajte:</p>
+        <p style="color:#444">
+          Pozivamo vas da nas kontaktirate radi dogovora o drugom terminu ili vozilu.
+        </p>
         <p style="color:#444">📞 <strong>+387 61 000 000</strong></p>
         <p style="color:#444">✉️ info@delauto.ba</p>
-
         <p style="color:#bbb;font-size:12px;margin-top:32px;border-top:1px solid #eee;padding-top:16px">
           Del Auto D.O.O. — Prodaja automobila, Sarajevo, BiH
         </p>

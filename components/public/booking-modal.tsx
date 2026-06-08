@@ -98,10 +98,10 @@ export default function BookingModal({ open, onClose, vehicleId, vehicleName }: 
     setSubmitting(false);
 
     if (!res.ok) {
-      toast.error(data.error ?? "Greška. Pokušajte ponovo.");
-      if (res.status === 409) {
+      const isEmailConflict = res.headers.get("x-conflict") === "email";
+      toast.error(data.error ?? "Greška. Pokušajte ponovo.", { duration: 6000 });
+      if (res.status === 409 && !isEmailConflict) {
         setStep("time");
-        // Refresh taken slots
         const dateStr = format(selectedDate, "yyyy-MM-dd");
         fetch(`/api/bookings?date=${dateStr}`)
           .then((r) => r.json())
