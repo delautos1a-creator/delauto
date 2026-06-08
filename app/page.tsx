@@ -86,10 +86,10 @@ export default async function HomePage() {
 
           <div className="relative z-10 max-w-7xl mx-auto px-4 w-full py-24">
             <p className="text-xs font-semibold tracking-[0.2em] text-white/50 uppercase mb-5">
-              Uvoz vozila iz Francuske • Sarajevo
+              UVOZ VOZILA IZ FRANCUSKE • SARAJEVO
             </p>
 
-            <h1 className="text-5xl md:text-7xl font-black text-white leading-[1.05] mb-6 max-w-2xl">
+            <h1 className="text-4xl md:text-5xl font-black text-white leading-[1.1] mb-6 max-w-2xl uppercase tracking-wide">
               Pronađite Vaš<br />
               Sljedeći Auto<br />
               <span className="text-primary">S Povjerenjem</span>
