@@ -28,9 +28,9 @@ export default function Navbar() {
   return (
     <>
       <header className="sticky top-0 z-50 bg-navy">
-        <div className="max-w-7xl mx-auto px-4 h-16 grid grid-cols-[auto_1fr_auto] items-center gap-6">
-          {/* Logo */}
-          <Link href="/" className="shrink-0">
+        <div className="max-w-7xl mx-auto px-4 h-16 grid grid-cols-[1fr_auto_1fr] items-center">
+          {/* Left: Logo */}
+          <Link href="/" className="justify-self-start shrink-0">
             <img
               src="/delauto-logo.png"
               alt="Del Auto D.O.O."
@@ -38,8 +38,8 @@ export default function Navbar() {
             />
           </Link>
 
-          {/* Desktop nav — truly centred via grid middle column */}
-          <nav className="hidden md:flex items-center gap-0.5 justify-center">
+          {/* Centre: Desktop nav — auto column always perfectly centred */}
+          <nav className="hidden md:flex items-center gap-0.5">
             {NAV.map(({ label, href }) => (
               <Link
                 key={href}
@@ -56,22 +56,22 @@ export default function Navbar() {
             ))}
           </nav>
 
-          {/* CTA button */}
-          <button
-            onClick={() => setBookingOpen(true)}
-            className="hidden md:inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-bold shrink-0 transition-opacity hover:opacity-90 bg-primary text-primary-foreground"
-          >
-            Zakaži test vožnju
-          </button>
-
-          {/* Mobile toggle */}
-          <button
-            className="md:hidden text-white/70 hover:text-white"
-            onClick={() => setOpen(!open)}
-            aria-label="Meni"
-          >
-            {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
+          {/* Right: CTA (desktop) + mobile toggle — both in one column */}
+          <div className="justify-self-end flex items-center">
+            <button
+              onClick={() => setBookingOpen(true)}
+              className="hidden md:inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-bold transition-opacity hover:opacity-90 bg-primary text-primary-foreground"
+            >
+              Zakaži test vožnju
+            </button>
+            <button
+              className="md:hidden text-white/70 hover:text-white"
+              onClick={() => setOpen(!open)}
+              aria-label="Meni"
+            >
+              {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile dropdown */}

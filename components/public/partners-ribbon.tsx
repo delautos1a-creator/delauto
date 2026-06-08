@@ -21,8 +21,8 @@ export default function PartnersRibbon({ partners }: { partners: Partner[] }) {
   const dragStartX = useRef(0);
   const dragStartPos = useRef(0);
 
-  // Repeat until we have at least 10 items per half — prevents gaps with few partners
-  const minCopies = Math.ceil(10 / Math.max(partners.length, 1));
+  // Repeat until we have at least 6 items per half — prevents gaps with few partners
+  const minCopies = Math.ceil(6 / Math.max(partners.length, 1));
   const half = Array.from({ length: minCopies }, () => partners).flat();
   const items = [...half, ...half]; // doubled for seamless loop
 
