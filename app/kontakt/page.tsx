@@ -221,7 +221,7 @@ export default function KontaktPage() {
               </div>
               <iframe
                 title="Del Auto Salon — Džemala Bijedića 168"
-                src="https://maps.google.com/maps?q=D%C5%BEemala+Bijedi%C4%87a+168,+Sarajevo,+Bosnia+and+Herzegovina&output=embed&z=17&hl=bs"
+                src="https://maps.google.com/maps?q=43.846429,18.339670&output=embed&z=17&hl=bs"
                 width="100%"
                 height="260"
                 style={{ border: 0, display: "block" }}
