@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import Navbar from "@/components/public/navbar";
 import Footer from "@/components/public/footer";
 import VehicleTabs from "@/components/public/vehicle-tabs";
+import PartnersRibbon from "@/components/public/partners-ribbon";
 import type { Vehicle, Testimonial, NewsArticle } from "@/types/database";
 import { Star, ArrowRight, MapPin, Phone, Mail, Clock } from "lucide-react";
 
@@ -46,6 +47,7 @@ export default async function HomePage() {
     { data: vehicles },
     { data: testimonials },
     { data: news },
+    { data: partners },
   ] = await Promise.all([
     supabase
       .from("vehicles")
@@ -66,6 +68,11 @@ export default async function HomePage() {
       .eq("is_published", true)
       .order("created_at", { ascending: false })
       .limit(3),
+    supabase
+      .from("partners")
+      .select("id, name, logo, website")
+      .eq("is_active", true)
+      .order("sort_order"),
   ]);
 
   return (
@@ -315,6 +322,11 @@ export default async function HomePage() {
               </div>
             </div>
           </section>
+        )}
+
+        {/* ── PARTNERS RIBBON ── */}
+        {partners && partners.length > 0 && (
+          <PartnersRibbon partners={partners as { id: string; name: string; logo: string | null; website: string | null }[]} />
         )}
 
         {/* ── CTA BANNER ── */}
