@@ -330,7 +330,7 @@ export default async function HomePage() {
         )}
 
         {/* ── CTA BANNER ── */}
-        <section className="py-24 px-4 text-center text-white bg-navy">
+        <section className="py-24 px-4 text-center text-white bg-background">
           <div className="max-w-2xl mx-auto">
             <p className="text-xs font-bold tracking-[0.2em] uppercase text-primary mb-3">
               Bez pritiska, ikada
