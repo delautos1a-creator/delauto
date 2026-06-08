@@ -119,6 +119,19 @@ export default function Footer() {
                 </Link>
               ))}
             </div>
+            <div className="mt-6 space-y-4">
+              <div>
+                <p className="text-xs font-bold text-white/40 uppercase tracking-wider mb-1">Ured</p>
+                <p className="text-xs text-white/55 leading-relaxed">Paromlinska 53e<br />71000 Sarajevo, BiH</p>
+              </div>
+              <div>
+                <p className="text-xs font-bold text-white/40 uppercase tracking-wider mb-1">Salon i autopraonica</p>
+                <p className="text-xs text-white/55 leading-relaxed">Džemala Bijedića 168<br />71000 Sarajevo, BiH</p>
+              </div>
+              <a href="tel:+38761199645" className="block text-xs text-primary hover:opacity-75 transition-opacity font-semibold">
+                +387 61 199 645
+              </a>
+            </div>
           </div>
         </div>
 
