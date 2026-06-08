@@ -10,17 +10,17 @@ import {
 } from "lucide-react";
 
 const NAV = [
-  { label: "Dashboard", href: "/admin", icon: LayoutDashboard, exact: true },
-  { label: "Vozila", href: "/admin/vozila", icon: Car },
-  { label: "Usluge", href: "/admin/usluge", icon: ConciergeBell },
-  { label: "Operacije", href: "/admin/operacije", icon: Wrench },
-  { label: "Vijesti", href: "/admin/vijesti", icon: Newspaper },
-  { label: "Rezervacije", href: "/admin/rezervacije", icon: Calendar },
-  { label: "Upiti", href: "/admin/upiti", icon: MessageSquare },
-  { label: "Recenzije", href: "/admin/recenzije", icon: Star },
-  { label: "Partneri", href: "/admin/partneri", icon: Handshake },
-  { label: "Postavke", href: "/admin/postavke", icon: Settings },
-  { label: "Korisnici", href: "/admin/korisnici", icon: Users },
+  { label: "Dashboard", href: "/portal", icon: LayoutDashboard, exact: true },
+  { label: "Vozila", href: "/portal/vozila", icon: Car },
+  { label: "Usluge", href: "/portal/usluge", icon: ConciergeBell },
+  { label: "Operacije", href: "/portal/operacije", icon: Wrench },
+  { label: "Vijesti", href: "/portal/vijesti", icon: Newspaper },
+  { label: "Rezervacije", href: "/portal/rezervacije", icon: Calendar },
+  { label: "Upiti", href: "/portal/upiti", icon: MessageSquare },
+  { label: "Recenzije", href: "/portal/recenzije", icon: Star },
+  { label: "Partneri", href: "/portal/partneri", icon: Handshake },
+  { label: "Postavke", href: "/portal/postavke", icon: Settings },
+  { label: "Korisnici", href: "/portal/korisnici", icon: Users },
 ];
 
 interface Props {

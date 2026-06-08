@@ -38,6 +38,11 @@ const nextConfig: NextConfig = {
       headers: securityHeaders,
     },
   ],
+  // Rewrite /portal/* → /admin/* so the real admin path stays hidden
+  rewrites: async () => [
+    { source: "/portal/:path*", destination: "/admin/:path*" },
+    { source: "/portal", destination: "/admin" },
+  ],
 };
 
 export default nextConfig;

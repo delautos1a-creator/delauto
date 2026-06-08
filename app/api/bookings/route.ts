@@ -133,7 +133,7 @@ export async function POST(request: Request) {
           ${message ? `<tr><td style="padding:8px 0;color:#666;vertical-align:top">Napomena</td><td style="padding:8px 0">${message}</td></tr>` : ""}
         </table>
         <div style="margin-top:24px">
-          <a href="${siteUrl}/admin/rezervacije"
+          <a href="${siteUrl}/portal/rezervacije"
             style="background:#2563eb;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;display:inline-block">
             Odobri ili odbaci rezervaciju →
           </a>
