@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useLayoutEffect, useCallback } from "react";
 
 interface Partner {
   id: string;
@@ -8,6 +8,8 @@ interface Partner {
   logo: string | null;
   website: string | null;
 }
+
+const SPEED = 0.5; // px per frame
 
 export default function PartnersRibbon({ partners }: { partners: Partner[] }) {
   const trackRef = useRef<HTMLDivElement>(null);
@@ -19,32 +21,36 @@ export default function PartnersRibbon({ partners }: { partners: Partner[] }) {
   const dragStartX = useRef(0);
   const dragStartPos = useRef(0);
 
-  const SPEED = 0.6; // px per frame
-  const doubled = [...partners, ...partners];
+  // Repeat until we have at least 10 items per half — prevents gaps with few partners
+  const minCopies = Math.ceil(10 / Math.max(partners.length, 1));
+  const half = Array.from({ length: minCopies }, () => partners).flat();
+  const items = [...half, ...half]; // doubled for seamless loop
+
+  // Measure BEFORE first paint so RAF never starts with halfWidth = 0
+  useLayoutEffect(() => {
+    if (trackRef.current) {
+      halfWidthRef.current = trackRef.current.scrollWidth / 2;
+    }
+  }, [partners]);
 
   const tick = useCallback(() => {
     if (!draggingRef.current && !pausedRef.current) {
       posRef.current += SPEED;
-      const half = halfWidthRef.current;
-      if (half > 0 && posRef.current >= half) posRef.current -= half;
-      if (trackRef.current) trackRef.current.style.transform = `translateX(-${posRef.current}px)`;
+      const hw = halfWidthRef.current;
+      if (hw > 0 && posRef.current >= hw) posRef.current -= hw;
+      if (trackRef.current) {
+        trackRef.current.style.transform = `translateX(-${posRef.current}px)`;
+      }
     }
     rafRef.current = requestAnimationFrame(tick);
   }, []);
 
   useEffect(() => {
-    // Measure after first paint
-    const frame = requestAnimationFrame(() => {
-      if (trackRef.current) halfWidthRef.current = trackRef.current.scrollWidth / 2;
-    });
     rafRef.current = requestAnimationFrame(tick);
-    return () => {
-      cancelAnimationFrame(frame);
-      cancelAnimationFrame(rafRef.current);
-    };
-  }, [partners, tick]);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [tick]);
 
-  // Mouse drag handlers
+  // Mouse drag
   const onMouseDown = (e: React.MouseEvent) => {
     draggingRef.current = true;
     dragStartX.current = e.clientX;
@@ -53,16 +59,16 @@ export default function PartnersRibbon({ partners }: { partners: Partner[] }) {
 
   const onMouseMove = (e: React.MouseEvent) => {
     if (!draggingRef.current) return;
-    const half = halfWidthRef.current;
+    const hw = halfWidthRef.current;
     let next = dragStartPos.current + (dragStartX.current - e.clientX);
-    if (half > 0) next = ((next % half) + half) % half;
+    if (hw > 0) next = ((next % hw) + hw) % hw;
     posRef.current = next;
     if (trackRef.current) trackRef.current.style.transform = `translateX(-${next}px)`;
   };
 
   const stopDrag = () => { draggingRef.current = false; };
 
-  // Touch handlers
+  // Touch drag
   const onTouchStart = (e: React.TouchEvent) => {
     pausedRef.current = true;
     draggingRef.current = true;
@@ -72,27 +78,23 @@ export default function PartnersRibbon({ partners }: { partners: Partner[] }) {
 
   const onTouchMove = (e: React.TouchEvent) => {
     if (!draggingRef.current) return;
-    const half = halfWidthRef.current;
+    const hw = halfWidthRef.current;
     let next = dragStartPos.current + (dragStartX.current - e.touches[0].clientX);
-    if (half > 0) next = ((next % half) + half) % half;
+    if (hw > 0) next = ((next % hw) + hw) % hw;
     posRef.current = next;
     if (trackRef.current) trackRef.current.style.transform = `translateX(-${next}px)`;
-  };
-
-  const onTouchEnd = () => {
-    draggingRef.current = false;
-    pausedRef.current = false;
   };
 
   if (partners.length === 0) return null;
 
   return (
-    <section className="py-10 border-y border-border bg-card">
-      <p className="text-xs font-bold tracking-[0.2em] text-primary uppercase text-center mb-8">
+    <section className="py-10 border-y border-border" style={{ background: "#0D0D0D" }}>
+      <p className="text-xs font-bold tracking-[0.2em] uppercase text-center mb-7"
+        style={{ color: "#42C4EC" }}>
         Naši partneri
       </p>
       <div
-        className="overflow-hidden cursor-grab active:cursor-grabbing select-none"
+        className="w-full overflow-hidden cursor-grab active:cursor-grabbing select-none"
         onMouseEnter={() => { pausedRef.current = true; }}
         onMouseLeave={() => { pausedRef.current = false; stopDrag(); }}
         onMouseDown={onMouseDown}
@@ -100,50 +102,57 @@ export default function PartnersRibbon({ partners }: { partners: Partner[] }) {
         onMouseUp={stopDrag}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
+        onTouchEnd={() => { draggingRef.current = false; pausedRef.current = false; }}
       >
         <div
           ref={trackRef}
-          className="flex items-center gap-14 w-max"
-          style={{ willChange: "transform" }}
+          className="flex items-center w-max"
+          style={{ gap: "3.5rem", willChange: "transform" }}
         >
-          {doubled.map((p, i) => (
-            <div key={`${p.id}-${i}`} className="flex-none" draggable={false}>
-              {p.website ? (
-                <a
-                  href={p.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  draggable={false}
-                  onClick={(e) => draggingRef.current && e.preventDefault()}
-                >
-                  <LogoItem partner={p} />
-                </a>
-              ) : (
-                <LogoItem partner={p} />
-              )}
-            </div>
-          ))}
+          {items.map((p, i) => {
+            const logo = p.logo ? (
+              <img
+                src={p.logo}
+                alt={p.name}
+                draggable={false}
+                className="h-9 w-auto object-contain transition-all duration-300"
+                style={{ maxWidth: 130, opacity: 0.5, filter: "grayscale(1)" }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.opacity = "1";
+                  (e.currentTarget as HTMLImageElement).style.filter = "grayscale(0)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.opacity = "0.5";
+                  (e.currentTarget as HTMLImageElement).style.filter = "grayscale(1)";
+                }}
+              />
+            ) : (
+              <span
+                className="text-sm font-bold whitespace-nowrap px-2"
+                style={{ color: "rgba(107,114,128,0.6)" }}
+              >
+                {p.name}
+              </span>
+            );
+
+            return (
+              <div key={`${p.id}-${i}`} className="flex-none" draggable={false}>
+                {p.website ? (
+                  <a
+                    href={p.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    draggable={false}
+                    onClick={(e) => draggingRef.current && e.preventDefault()}
+                  >
+                    {logo}
+                  </a>
+                ) : logo}
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
-  );
-}
-
-function LogoItem({ partner }: { partner: Partner }) {
-  if (partner.logo) {
-    return (
-      <img
-        src={partner.logo}
-        alt={partner.name}
-        draggable={false}
-        className="h-9 w-auto max-w-[130px] object-contain opacity-50 hover:opacity-100 grayscale hover:grayscale-0 transition-all duration-300"
-      />
-    );
-  }
-  return (
-    <span className="text-sm font-bold text-muted-foreground/50 hover:text-muted-foreground whitespace-nowrap transition-colors px-2">
-      {partner.name}
-    </span>
   );
 }
