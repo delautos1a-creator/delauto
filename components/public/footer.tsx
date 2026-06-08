@@ -124,9 +124,15 @@ export default function Footer() {
 
         <div className="border-t border-white/10 pt-6 flex flex-wrap gap-4 items-center justify-between text-xs text-white/35">
           <p>© {new Date().getFullYear()} Del Auto D.O.O. Sva prava zadržana.</p>
-          <Link href="/admin" className="hover:text-white/60 transition-colors">
-            Admin panel
-          </Link>
+          <a
+            href="https://allmightysync.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 hover:text-white/60 transition-colors"
+          >
+            <span>Powered by All Mighty Sync</span>
+            <img src="/amslogo.png" alt="All Mighty Sync" className="h-5 w-5 object-contain opacity-70" />
+          </a>
         </div>
       </div>
     </footer>
