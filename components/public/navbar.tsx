@@ -9,9 +9,9 @@ import BookingModal from "./booking-modal";
 
 const NAV = [
   { label: "Naslovna", href: "/" },
+  { label: "Usluge", href: "/usluge" },
   { label: "Vozila", href: "/vozila" },
   { label: "Uskoro", href: "/uskoro" },
-  { label: "Operacije", href: "/operacije" },
   { label: "Vijesti", href: "/vijesti" },
   { label: "O nama", href: "/o-nama" },
   { label: "Kontakt", href: "/kontakt" },

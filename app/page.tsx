@@ -4,8 +4,8 @@ import Navbar from "@/components/public/navbar";
 import Footer from "@/components/public/footer";
 import VehicleTabs from "@/components/public/vehicle-tabs";
 import PartnersRibbon from "@/components/public/partners-ribbon";
-import type { Vehicle, Testimonial, NewsArticle } from "@/types/database";
-import { Star, ArrowRight, MapPin, Phone, Mail, Clock } from "lucide-react";
+import type { Vehicle, Testimonial, NewsArticle, Service } from "@/types/database";
+import { Star, ArrowRight, ConciergeBell } from "lucide-react";
 
 const TRUST_CARDS = [
   {
@@ -48,6 +48,7 @@ export default async function HomePage() {
     { data: testimonials },
     { data: news },
     { data: partners },
+    { data: services },
   ] = await Promise.all([
     supabase
       .from("vehicles")
@@ -73,6 +74,12 @@ export default async function HomePage() {
       .select("id, name, logo, website")
       .eq("is_active", true)
       .order("sort_order"),
+    supabase
+      .from("services")
+      .select("*")
+      .eq("is_active", true)
+      .order("sort_order")
+      .limit(6),
   ]);
 
   return (
@@ -263,6 +270,67 @@ export default async function HomePage() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── USLUGE ── */}
+        {services && services.length > 0 && (
+          <section className="py-20 px-4 bg-background">
+            <div className="max-w-7xl mx-auto">
+              <div className="flex items-end justify-between mb-2">
+                <div>
+                  <p className="text-xs font-bold tracking-[0.18em] text-primary uppercase mb-2">
+                    Šta nudimo
+                  </p>
+                  <h2 className="text-3xl md:text-4xl font-black text-foreground">
+                    Naše usluge
+                  </h2>
+                </div>
+                <Link
+                  href="/usluge"
+                  className="hidden md:flex items-center gap-1.5 text-sm font-bold text-primary hover:opacity-75 transition-opacity"
+                >
+                  Sve usluge <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+              <p className="text-muted-foreground mb-10 max-w-xl">
+                Pored prodaje vozila nudimo i kompletnu paletu dodatnih usluga za vaš automobil.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {(services as Service[]).map((s) => (
+                  <div
+                    key={s.id}
+                    className="bg-card rounded-2xl border border-border overflow-hidden hover:border-primary/30 transition-colors flex flex-col"
+                  >
+                    {s.image ? (
+                      <img src={s.image} alt={s.name} className="w-full h-44 object-cover" />
+                    ) : (
+                      <div className="w-full h-44 bg-secondary flex items-center justify-center">
+                        <ConciergeBell className="w-10 h-10 text-muted-foreground/25" />
+                      </div>
+                    )}
+                    <div className="p-5 flex-1 flex flex-col">
+                      <h3 className="font-bold text-foreground mb-1">{s.name}</h3>
+                      {s.description && (
+                        <p className="text-sm text-muted-foreground leading-relaxed flex-1 line-clamp-3">
+                          {s.description}
+                        </p>
+                      )}
+                      {s.price_from && (
+                        <p className="mt-3 text-primary font-black">
+                          od {s.price_from} {s.price_unit}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-8 md:hidden text-center">
+                <Link href="/usluge" className="inline-flex items-center gap-1.5 text-sm font-bold text-primary">
+                  Sve usluge <ArrowRight className="w-4 h-4" />
+                </Link>
               </div>
             </div>
           </section>

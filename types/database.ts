@@ -180,3 +180,15 @@ export interface SiteSetting {
   value: string;
   updated_at: string;
 }
+
+export interface Service {
+  id: string;
+  name: string;
+  description: string | null;
+  image: string | null;
+  price_from: number | null;
+  price_unit: string;
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
+}

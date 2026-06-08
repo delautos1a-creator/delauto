@@ -6,12 +6,13 @@ import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, Car, Wrench, Newspaper, Calendar,
-  MessageSquare, Star, Handshake, Settings, LogOut, Users, X,
+  MessageSquare, Star, Handshake, Settings, LogOut, Users, X, ConciergeBell,
 } from "lucide-react";
 
 const NAV = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard, exact: true },
   { label: "Vozila", href: "/admin/vozila", icon: Car },
+  { label: "Usluge", href: "/admin/usluge", icon: ConciergeBell },
   { label: "Operacije", href: "/admin/operacije", icon: Wrench },
   { label: "Vijesti", href: "/admin/vijesti", icon: Newspaper },
   { label: "Rezervacije", href: "/admin/rezervacije", icon: Calendar },
