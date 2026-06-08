@@ -8,6 +8,7 @@ import { Menu, X } from "lucide-react";
 import BookingModal from "./booking-modal";
 
 const NAV = [
+  { label: "Naslovna", href: "/" },
   { label: "Vozila", href: "/vozila" },
   { label: "Uskoro", href: "/uskoro" },
   { label: "Operacije", href: "/operacije" },
@@ -27,7 +28,7 @@ export default function Navbar() {
   return (
     <>
       <header className="sticky top-0 z-50 bg-navy">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-6">
+        <div className="max-w-7xl mx-auto px-4 h-16 grid grid-cols-[auto_1fr_auto] items-center gap-6">
           {/* Logo */}
           <Link href="/" className="shrink-0">
             <img
@@ -37,8 +38,8 @@ export default function Navbar() {
             />
           </Link>
 
-          {/* Desktop nav — centred */}
-          <nav className="hidden md:flex items-center gap-0.5 flex-1 justify-center">
+          {/* Desktop nav — truly centred via grid middle column */}
+          <nav className="hidden md:flex items-center gap-0.5 justify-center">
             {NAV.map(({ label, href }) => (
               <Link
                 key={href}
