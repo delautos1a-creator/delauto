@@ -17,6 +17,9 @@ export default async function OperationDetailPage({ params }: { params: Promise<
 
   if (!op) notFound();
 
+  const images: string[] = op.images ?? [];
+  const hasHtml = op.content?.includes("<");
+
   return (
     <>
       <Navbar />
@@ -33,37 +36,73 @@ export default async function OperationDetailPage({ params }: { params: Promise<
             <p className="text-xs font-bold tracking-[0.18em] text-primary uppercase mb-2">
               Usluga
             </p>
-            <h1 className="text-4xl md:text-5xl font-black">{op.title}</h1>
+            <h1 className="text-3xl md:text-4xl font-black mb-3 leading-tight">{op.title}</h1>
             {op.description && (
-              <p className="text-white/55 mt-3 text-lg leading-relaxed">{op.description}</p>
+              <p className="text-white/55 text-lg leading-relaxed">{op.description}</p>
             )}
           </div>
         </div>
 
         <div className="max-w-3xl mx-auto px-4 py-12">
-          {op.images?.[0] && (
+
+          {/* Main image */}
+          {images[0] && (
             <img
-              src={op.images[0]}
+              src={images[0]}
               alt={op.title}
-              className="w-full aspect-video object-cover rounded-2xl mb-10 border border-border"
+              className="w-full aspect-video object-cover rounded-2xl mb-8 border border-border"
             />
           )}
 
+          {/* Content */}
           {op.content && (
-            <div
-              className="prose prose-invert max-w-none text-muted-foreground leading-relaxed
-                prose-headings:text-foreground prose-headings:font-bold
-                prose-a:text-primary prose-strong:text-foreground"
-              dangerouslySetInnerHTML={{ __html: op.content }}
-            />
+            <div className="mb-10">
+              {hasHtml ? (
+                <div
+                  className="prose prose-invert max-w-none text-muted-foreground leading-relaxed
+                    prose-headings:text-foreground prose-headings:font-bold
+                    prose-a:text-primary prose-strong:text-foreground"
+                  dangerouslySetInnerHTML={{ __html: op.content }}
+                />
+              ) : (
+                <div className="space-y-4 text-muted-foreground leading-relaxed">
+                  {op.content.split("\n\n").filter(Boolean).map((para: string, i: number) => (
+                    <p key={i} className="whitespace-pre-line">{para}</p>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
 
-          <div className="mt-12 pt-8 border-t border-border">
+          {/* Extra images gallery */}
+          {images.length > 1 && (
+            <div className="mt-8 mb-10">
+              <h2 className="text-lg font-bold text-foreground mb-4">Galerija</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {images.slice(1).map((src, i) => (
+                  <img
+                    key={i}
+                    src={src}
+                    alt={`${op.title} — slika ${i + 2}`}
+                    className="w-full aspect-video object-cover rounded-xl border border-border hover:opacity-90 transition-opacity"
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="pt-8 border-t border-border flex flex-wrap gap-3 items-center justify-between">
+            <Link
+              href="/operacije"
+              className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:opacity-75 transition-opacity"
+            >
+              <ArrowLeft className="w-4 h-4" /> Sve operacije
+            </Link>
             <Link
               href="/kontakt"
-              className="inline-flex items-center px-7 py-3.5 rounded-full text-sm font-bold bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+              className="inline-flex items-center px-6 py-3 rounded-full text-sm font-bold bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
             >
-              Kontaktirajte nas za više informacija
+              Kontaktirajte nas
             </Link>
           </div>
         </div>

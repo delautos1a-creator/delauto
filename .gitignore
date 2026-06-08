@@ -24,3 +24,4 @@ Thumbs.db
 .vscode/
 *.iml
 .env.local
+.vercel
