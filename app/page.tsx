@@ -43,12 +43,16 @@ const TRUST_CARDS = [
 export default async function HomePage() {
   const supabase = await createClient();
 
+  const SOLD_BASE = 50; // historical sales before system tracking
+
   const [
     { data: vehicles },
     { data: testimonials },
     { data: news },
     { data: partners },
     { data: services },
+    { count: soldCount },
+    { count: reservedCount },
   ] = await Promise.all([
     supabase
       .from("vehicles")
@@ -80,7 +84,18 @@ export default async function HomePage() {
       .eq("is_active", true)
       .order("sort_order")
       .limit(6),
+    supabase
+      .from("vehicles")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "sold"),
+    supabase
+      .from("vehicles")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "reserved"),
   ]);
+
+  const displaySold = SOLD_BASE + (soldCount ?? 0);
+  const displayReserved = Math.max(reservedCount ?? 0, 2);
 
   return (
     <>
@@ -117,7 +132,8 @@ export default async function HomePage() {
             {/* Stats */}
             <div className="flex flex-wrap gap-10 mb-12">
               {[
-                { value: "200+", label: "Vozila prodana" },
+                { value: `${displaySold}+`, label: "Vozila prodana" },
+                { value: `${displayReserved}`, label: "Rezervisana vozila" },
                 { value: "100%", label: "Provjerena vozila" },
                 { value: "FR", label: "Direktan uvoz" },
               ].map(({ value, label }) => (
