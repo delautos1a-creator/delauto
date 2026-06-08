@@ -1,22 +1,49 @@
-import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams, notFound } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import Navbar from "@/components/public/navbar";
 import Footer from "@/components/public/footer";
+import BookingModal from "@/components/public/booking-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Car, ArrowLeft } from "lucide-react";
+import { Car, ArrowLeft, CalendarCheck, MessageSquare } from "lucide-react";
 import Link from "next/link";
+import type { Vehicle } from "@/types/database";
 
-export default async function VehicleDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const supabase = await createClient();
-  const { data: v } = await supabase.from("vehicles").select("*").eq("id", id).single();
+const FUEL_LABELS: Record<string, string> = {
+  petrol: "Benzin", diesel: "Diesel", electric: "Električno", hybrid: "Hibrid", lpg: "LPG",
+};
 
-  if (!v) notFound();
+export default function VehicleDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const [vehicle, setVehicle] = useState<Vehicle | null | "loading">("loading");
+  const [bookingOpen, setBookingOpen] = useState(false);
+  const [activeImage, setActiveImage] = useState(0);
 
-  const FUEL_LABELS: Record<string, string> = {
-    petrol: "Benzin", diesel: "Diesel", electric: "Električno", hybrid: "Hibrid", lpg: "LPG",
-  };
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.from("vehicles").select("*").eq("id", id).single().then(({ data }) => {
+      setVehicle((data as Vehicle) ?? null);
+    });
+  }, [id]);
+
+  if (vehicle === "loading") {
+    return (
+      <>
+        <Navbar />
+        <main className="max-w-5xl mx-auto px-4 py-12">
+          <div className="h-96 bg-secondary rounded-xl animate-pulse" />
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
+  if (!vehicle) return null;
+
+  const v = vehicle;
 
   return (
     <>
@@ -27,19 +54,47 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Images */}
+          {/* Images with booking button overlay */}
           <div>
-            {v.images?.[0] ? (
-              <img src={v.images[0]} alt={`${v.brand} ${v.model}`} className="w-full aspect-video object-cover rounded-xl mb-3" />
-            ) : (
-              <div className="w-full aspect-video bg-secondary rounded-xl flex items-center justify-center mb-3">
-                <Car className="w-16 h-16 text-muted-foreground/30" />
-              </div>
-            )}
+            <div className="relative group rounded-xl overflow-hidden mb-3">
+              {v.images?.[activeImage] ? (
+                <img
+                  src={v.images[activeImage]}
+                  alt={`${v.brand} ${v.model}`}
+                  className="w-full aspect-video object-cover"
+                />
+              ) : (
+                <div className="w-full aspect-video bg-secondary flex items-center justify-center">
+                  <Car className="w-16 h-16 text-muted-foreground/30" />
+                </div>
+              )}
+              {/* Book test drive overlay button */}
+              {v.status === "available" && (
+                <div className="absolute inset-0 flex items-end justify-center pb-4 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-t from-black/60 to-transparent">
+                  <Button
+                    onClick={() => setBookingOpen(true)}
+                    className="gap-2 shadow-lg"
+                    size="lg"
+                  >
+                    <CalendarCheck className="w-4 h-4" />
+                    Zakaži test vožnju
+                  </Button>
+                </div>
+              )}
+            </div>
+
             {v.images && v.images.length > 1 && (
               <div className="grid grid-cols-4 gap-2">
-                {v.images.slice(1, 5).map((img: string, i: number) => (
-                  <img key={i} src={img} alt="" className="aspect-square object-cover rounded-lg" />
+                {v.images.slice(0, 4).map((img: string, i: number) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveImage(i)}
+                    className={`aspect-square rounded-lg overflow-hidden border-2 transition-colors ${
+                      activeImage === i ? "border-primary" : "border-transparent"
+                    }`}
+                  >
+                    <img src={img} alt="" className="w-full h-full object-cover" />
+                  </button>
                 ))}
               </div>
             )}
@@ -48,7 +103,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
           {/* Details */}
           <div>
             <h1 className="text-3xl font-black mb-1">{v.brand} {v.model}</h1>
-            <p className="text-muted-foreground mb-4">{v.year} · {v.body_type}</p>
+            <p className="text-muted-foreground mb-4">{v.year}{v.body_type ? ` · ${v.body_type}` : ""}</p>
             <p className="text-3xl font-black text-primary mb-6">{v.price.toLocaleString()} {v.currency}</p>
 
             <div className="grid grid-cols-2 gap-3 mb-6 text-sm">
@@ -80,11 +135,25 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
               </div>
             )}
 
-            <Button asChild size="lg" className="w-full">
-              <Link href={`/kontakt?vozilo=${encodeURIComponent(`${v.brand} ${v.model} ${v.year}`)}`}>
-                Pošalji upit za ovo vozilo
-              </Link>
-            </Button>
+            {/* CTA buttons */}
+            <div className="space-y-3">
+              {v.status === "available" && (
+                <Button
+                  onClick={() => setBookingOpen(true)}
+                  size="lg"
+                  className="w-full gap-2"
+                >
+                  <CalendarCheck className="w-4 h-4" />
+                  Zakaži test vožnju
+                </Button>
+              )}
+              <Button asChild variant="outline" size="lg" className="w-full gap-2">
+                <Link href={`/kontakt?vozilo=${encodeURIComponent(`${v.brand} ${v.model} ${v.year}`)}`}>
+                  <MessageSquare className="w-4 h-4" />
+                  Pošalji upit
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -96,6 +165,13 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
         )}
       </main>
       <Footer />
+
+      <BookingModal
+        open={bookingOpen}
+        onClose={() => setBookingOpen(false)}
+        vehicleId={v.id}
+        vehicleName={`${v.brand} ${v.model} ${v.year}`}
+      />
     </>
   );
 }

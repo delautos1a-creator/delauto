@@ -23,7 +23,14 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 bg-background/80 backdrop-blur border-b border-border">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 font-black text-lg">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+          {/* Drop logo.png in /public to replace the icon */}
+          <img
+            src="/logo.png"
+            alt="Del Auto"
+            className="h-9 w-auto object-contain hidden [&[src='/logo.png']]:block"
+            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+          />
+          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center logo-fallback">
             <Car className="w-4 h-4 text-primary-foreground" />
           </div>
           Del Auto

@@ -44,7 +44,18 @@ export default function AdminBookings() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await supabase.from("bookings").update({ status } as any).eq("id", id);
     if (error) { toast.error("Greška"); return; }
-    toast.success("Status ažuriran");
+
+    // When admin confirms → send confirmation email to customer
+    if (status === "confirmed") {
+      fetch("/api/bookings/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ booking_id: id }),
+      });
+      toast.success("Rezervacija potvrđena — email poslan kupcu ✅");
+    } else {
+      toast.success("Status ažuriran");
+    }
     load();
   };
 

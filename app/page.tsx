@@ -22,24 +22,38 @@ export default async function HomePage() {
     <>
       <Navbar />
       <main className="flex-1">
-        {/* Hero */}
-        <section className="max-w-7xl mx-auto px-4 py-20 text-center">
-          <Badge variant="outline" className="mb-4">Premium uvoz vozila</Badge>
-          <h1 className="text-4xl md:text-6xl font-black mb-6 leading-tight">
-            Vaš partner za<br />
-            <span className="text-primary">premium vozila</span>
-          </h1>
-          <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">
-            Uvoz, inspekcija, priprema i isporuka — sve na jednom mjestu.
-            Sarajevo, BiH.
-          </p>
-          <div className="flex flex-wrap gap-3 justify-center">
-            <Button asChild size="lg">
-              <Link href="/vozila">Pogledaj vozila <ArrowRight className="ml-2 w-4 h-4" /></Link>
-            </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link href="/kontakt">Kontaktirajte nas</Link>
-            </Button>
+        {/* Hero — put hero-bg.jpg in /public to enable background image */}
+        <section
+          className="relative min-h-[85vh] flex items-center justify-center text-center"
+          style={{
+            backgroundImage: "url('/hero-bg.jpg')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
+          {/* Dark overlay so text stays readable over the photo */}
+          <div className="absolute inset-0 bg-black/55" />
+
+          <div className="relative z-10 px-4 py-24">
+            <Badge variant="outline" className="mb-6 border-white/30 text-white/80 bg-white/10 backdrop-blur-sm">
+              Premium uvoz vozila
+            </Badge>
+            <h1 className="text-4xl md:text-6xl font-black mb-6 leading-tight text-white drop-shadow-lg">
+              Vaš partner za<br />
+              <span className="text-primary">premium vozila</span>
+            </h1>
+            <p className="text-lg text-white/70 mb-10 max-w-xl mx-auto">
+              Uvoz, inspekcija, priprema i isporuka — sve na jednom mjestu.
+              Sarajevo, BiH.
+            </p>
+            <div className="flex flex-wrap gap-3 justify-center">
+              <Button asChild size="lg" className="shadow-lg">
+                <Link href="/vozila">Pogledaj vozila <ArrowRight className="ml-2 w-4 h-4" /></Link>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="border-white/40 text-white hover:bg-white/10 backdrop-blur-sm">
+                <Link href="/kontakt">Kontaktirajte nas</Link>
+              </Button>
+            </div>
           </div>
         </section>
 
