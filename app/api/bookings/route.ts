@@ -29,7 +29,9 @@ async function sendBrevoEmail({
 }
 
 export async function POST(request: Request) {
-  const body = await request.json();
+  let body: unknown;
+  try { body = await request.json(); } catch { return NextResponse.json({ error: "Invalid request" }, { status: 400 }); }
+
   const {
     vehicle_id,
     vehicle_name,
@@ -39,10 +41,21 @@ export async function POST(request: Request) {
     preferred_date,
     preferred_time,
     message,
-  } = body;
+  } = body as Record<string, unknown>;
 
-  if (!customer_name || !customer_email || !customer_phone || !preferred_date || !preferred_time) {
+  // Type + length validation
+  if (
+    typeof customer_name !== "string" || !customer_name.trim() ||
+    typeof customer_email !== "string" || !customer_email.includes("@") ||
+    typeof customer_phone !== "string" || !customer_phone.trim() ||
+    typeof preferred_date !== "string" || !preferred_date.trim() ||
+    typeof preferred_time !== "string" || !preferred_time.trim()
+  ) {
     return NextResponse.json({ error: "Sva obavezna polja moraju biti popunjena." }, { status: 400 });
+  }
+
+  if (customer_name.length > 120 || customer_email.length > 200 || customer_phone.length > 30) {
+    return NextResponse.json({ error: "Unos je predugi." }, { status: 400 });
   }
 
   const supabase = await createClient();

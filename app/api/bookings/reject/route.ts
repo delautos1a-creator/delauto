@@ -29,10 +29,16 @@ async function sendBrevoEmail({
 }
 
 export async function POST(request: Request) {
-  const { booking_id } = await request.json();
-  if (!booking_id) return NextResponse.json({ error: "Missing booking_id" }, { status: 400 });
-
   const supabase = await createClient();
+
+  // Must be authenticated admin
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  let body: unknown;
+  try { body = await request.json(); } catch { return NextResponse.json({ error: "Invalid request" }, { status: 400 }); }
+  const { booking_id } = body as { booking_id?: string };
+  if (!booking_id || typeof booking_id !== "string") return NextResponse.json({ error: "Missing booking_id" }, { status: 400 });
 
   const { data: booking, error } = await supabase
     .from("bookings")
