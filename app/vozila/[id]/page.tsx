@@ -109,9 +109,11 @@ export default function VehicleDetailPage() {
               {v.body_type && (
                 <p className="text-muted-foreground text-sm mb-4">{v.year} · {v.body_type}</p>
               )}
-              <p className="text-4xl font-black text-primary mb-6">
-                {v.price.toLocaleString("de-DE")} {v.currency}
-              </p>
+              {v.status !== "sold" && (
+                <p className="text-4xl font-black text-primary mb-6">
+                  {v.price.toLocaleString("de-DE")} {v.currency}
+                </p>
+              )}
 
               {/* Specs grid */}
               <div className="grid grid-cols-2 gap-2 mb-6">

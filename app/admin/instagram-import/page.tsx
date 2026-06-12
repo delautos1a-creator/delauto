@@ -274,7 +274,7 @@ function parseVehicleFromCaption(caption: string): ParsedVehicle {
 
 function makeDefaultVehicleForm(caption: string): VehicleForm {
   const p = parseVehicleFromCaption(caption);
-  const isSold = /prodano|prodana|sold/i.test(caption);
+  const isSold = /prodano|prodana|prodato|prodat\b|sold/i.test(caption);
   return {
     brand: p.brand ?? "",
     model: p.model ?? "",
@@ -282,7 +282,7 @@ function makeDefaultVehicleForm(caption: string): VehicleForm {
     mileage: p.mileage ?? "0",
     fuel_type: p.fuel_type ?? "diesel",
     transmission: p.transmission ?? "automatic",
-    price: p.price ?? "",
+    price: isSold ? "" : (p.price ?? ""),
     currency: p.currency ?? "BAM",
     color: p.color ?? "",
     engine_size: p.engine_size ?? "",

@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import Navbar from "@/components/public/navbar";
 import Footer from "@/components/public/footer";
 import VehicleTabs from "@/components/public/vehicle-tabs";
+import SoldSection from "@/components/public/sold-section";
 import type { Vehicle } from "@/types/database";
 import { Car } from "lucide-react";
 
@@ -9,11 +10,19 @@ export const metadata = { title: "Vozila — Del Auto" };
 
 export default async function VehiclesPage() {
   const supabase = await createClient();
-  const { data: vehicles } = await supabase
-    .from("vehicles")
-    .select("*")
-    .in("status", ["available", "reserved"])
-    .order("created_at", { ascending: false });
+
+  const [{ data: vehicles }, { data: soldVehicles }] = await Promise.all([
+    supabase
+      .from("vehicles")
+      .select("*")
+      .in("status", ["available", "reserved", "upcoming"])
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("vehicles")
+      .select("*")
+      .eq("status", "sold")
+      .order("created_at", { ascending: false }),
+  ]);
 
   return (
     <>
@@ -32,6 +41,7 @@ export default async function VehiclesPage() {
           </div>
         </div>
 
+        {/* Active vehicles */}
         <div className="max-w-7xl mx-auto px-4 py-12">
           {!vehicles?.length ? (
             <div className="text-center py-24 text-muted-foreground">
@@ -43,6 +53,11 @@ export default async function VehiclesPage() {
             <VehicleTabs vehicles={vehicles as Vehicle[]} />
           )}
         </div>
+
+        {/* Sold vehicles — collapsible section at the bottom */}
+        {!!soldVehicles?.length && (
+          <SoldSection vehicles={soldVehicles as Vehicle[]} />
+        )}
       </main>
       <Footer />
     </>
