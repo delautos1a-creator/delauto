@@ -744,8 +744,8 @@ export default function InstagramImportPage() {
             featured_image: imageUrls[0] ?? null,
             gallery: imageUrls.slice(1),
             category: nf.category,
-            is_published: false,
-            published_at: null,
+            is_published: true,
+            published_at: new Date().toISOString(),
           });
           if (error) throw new Error(error.message);
           importResults.push({ id: entry.post.id, label: nf.title.trim(), ok: true });
@@ -766,8 +766,8 @@ export default function InstagramImportPage() {
             images: imageUrls,
             videos: [],
             category: of_.category,
-            is_published: false,
-            published_at: null,
+            is_published: true,
+            published_at: new Date().toISOString(),
           });
           if (error) throw new Error(error.message);
           importResults.push({ id: entry.post.id, label: of_.title.trim(), ok: true });
