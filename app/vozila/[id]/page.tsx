@@ -100,9 +100,16 @@ export default function VehicleDetailPage() {
 
             {/* Details */}
             <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-1">
-                {v.brand}
-              </p>
+              <div className="flex items-center gap-2 mb-1">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+                  {v.brand}
+                </p>
+                {v.is_service_sale && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-600/20 text-violet-400 border border-violet-500/30 uppercase tracking-wide">
+                    Uslužna prodaja
+                  </span>
+                )}
+              </div>
               <h1 className="text-3xl font-black text-foreground mb-1">
                 {v.model}{v.engine_size ? ` ${v.engine_size}` : ""}
               </h1>

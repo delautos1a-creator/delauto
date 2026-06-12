@@ -37,6 +37,7 @@ const schema = z.object({
   features: z.string(),
   status: z.string().min(1),
   is_featured: z.boolean(),
+  is_service_sale: z.boolean(),
   expected_arrival_date: z.string().optional(),
   doors: z.coerce.number().optional(),
   seats: z.coerce.number().optional(),
@@ -170,7 +171,7 @@ export default function AdminVehicles() {
 
   const { register, handleSubmit, reset, control, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema) as Resolver<FormData>,
-    defaultValues: { currency: "EUR", status: "available", is_featured: false, features: "" },
+    defaultValues: { currency: "EUR", status: "available", is_featured: false, is_service_sale: false, features: "" },
   });
 
   const loadVehicles = async () => {
@@ -197,7 +198,7 @@ export default function AdminVehicles() {
       price: v.price, currency: v.currency, color: v.color ?? "",
       engine_size: v.engine_size ?? "", power: v.power ?? "",
       description: v.description, features: (v.features ?? []).join(", "),
-      status: v.status, is_featured: v.is_featured,
+      status: v.status, is_featured: v.is_featured, is_service_sale: v.is_service_sale ?? false,
       expected_arrival_date: v.expected_arrival_date ?? "",
       doors: v.doors ?? undefined, seats: v.seats ?? undefined, body_type: v.body_type ?? "",
     });
@@ -285,7 +286,12 @@ export default function AdminVehicles() {
                     <p className="font-bold text-sm">{v.brand} {v.model}</p>
                     <p className="text-xs text-muted-foreground">{v.year} · {v.mileage.toLocaleString()} km</p>
                   </div>
-                  <Badge className={STATUS_COLORS[v.status]}>{STATUS_LABELS[v.status]}</Badge>
+                  <div className="flex flex-col items-end gap-1">
+                    <Badge className={STATUS_COLORS[v.status]}>{STATUS_LABELS[v.status]}</Badge>
+                    {v.is_service_sale && (
+                      <Badge className="bg-violet-500/20 text-violet-300 border-violet-500/30 text-[10px]">Uslužno</Badge>
+                    )}
+                  </div>
                 </div>
                 <p className="text-sm font-semibold text-primary mb-3">
                   {v.price.toLocaleString()} {v.currency}
@@ -439,11 +445,19 @@ export default function AdminVehicles() {
               <Label>Slike</Label>
               <ImageUploader images={images} onChange={setImages} />
             </div>
-            <div className="flex items-center gap-2">
-              <Controller name="is_featured" control={control} render={({ field }) => (
-                <Checkbox checked={field.value} onCheckedChange={field.onChange} id="featured" />
-              )} />
-              <Label htmlFor="featured">Istaknuto vozilo</Label>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Controller name="is_featured" control={control} render={({ field }) => (
+                  <Checkbox checked={field.value} onCheckedChange={field.onChange} id="featured" />
+                )} />
+                <Label htmlFor="featured">Istaknuto vozilo</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Controller name="is_service_sale" control={control} render={({ field }) => (
+                  <Checkbox checked={field.value} onCheckedChange={field.onChange} id="service-sale" />
+                )} />
+                <Label htmlFor="service-sale">Uslužna prodaja</Label>
+              </div>
             </div>
             <div className="flex gap-2 pt-2">
               <Button type="submit" disabled={saving} className="flex-1">

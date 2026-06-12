@@ -79,6 +79,13 @@ export default function VehicleCard({
             Rezervisano
           </span>
         )}
+
+        {/* Service sale banner */}
+        {v.is_service_sale && !isSold && (
+          <div className="absolute bottom-0 left-0 right-0 bg-violet-700/90 text-white text-[11px] font-bold text-center py-1 tracking-wider">
+            Uslužna prodaja
+          </div>
+        )}
       </div>
 
       {/* Content */}

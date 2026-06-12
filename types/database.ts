@@ -80,6 +80,7 @@ export interface Vehicle {
   videos: string[];
   status: "available" | "reserved" | "sold" | "upcoming";
   is_featured: boolean;
+  is_service_sale: boolean;
   expected_arrival_date: string | null;
   arrival_status: "coming_soon" | "in_transit" | "arriving_this_week" | "reserved" | null;
   doors: number | null;
