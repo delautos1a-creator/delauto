@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getSiteSettings } from "@/lib/settings";
 
 function InstagramIcon() {
   return (
@@ -7,12 +8,6 @@ function InstagramIcon() {
       <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
       <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
     </svg>
-  );
-}
-
-function OlxIcon() {
-  return (
-    <span className="text-[11px] font-black tracking-tight leading-none">OLX</span>
   );
 }
 
@@ -33,7 +28,9 @@ const KOMPANIJA_LINKS = [
   { label: "Kontakt", href: "/kontakt" },
 ];
 
-export default function Footer() {
+export default async function Footer() {
+  const s = await getSiteSettings();
+
   return (
     <footer className="bg-navy text-white">
       <div className="max-w-7xl mx-auto px-4 py-14">
@@ -52,24 +49,28 @@ export default function Footer() {
               partner za kupovinu automobila u Sarajevu.
             </p>
             <div className="flex gap-2.5">
-              <a
-                href="https://www.instagram.com/delauto_sarajevo/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full bg-white/10 hover:bg-primary hover:text-primary-foreground flex items-center justify-center transition-colors"
-                aria-label="Instagram"
-              >
-                <InstagramIcon />
-              </a>
-              <a
-                href="https://olx.ba/shops/DelAuto/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full bg-white/10 hover:bg-primary hover:text-primary-foreground flex items-center justify-center transition-colors"
-                aria-label="OLX"
-              >
-                <OlxIcon />
-              </a>
+              {s.site_instagram && (
+                <a
+                  href={s.site_instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-full bg-white/10 hover:bg-primary hover:text-primary-foreground flex items-center justify-center transition-colors"
+                  aria-label="Instagram"
+                >
+                  <InstagramIcon />
+                </a>
+              )}
+              {s.site_olx && (
+                <a
+                  href={s.site_olx}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-full bg-white/10 hover:bg-primary hover:text-primary-foreground flex items-center justify-center transition-colors"
+                  aria-label="OLX"
+                >
+                  <span className="text-[11px] font-black tracking-tight leading-none">OLX</span>
+                </a>
+              )}
             </div>
           </div>
 
@@ -78,11 +79,7 @@ export default function Footer() {
             <h4 className="font-bold text-sm mb-4 text-white">Vozila</h4>
             <div className="space-y-2.5">
               {VOZILA_LINKS.map(({ label, href }) => (
-                <Link
-                  key={label}
-                  href={href}
-                  className="block text-sm text-white/55 hover:text-white transition-colors"
-                >
+                <Link key={label} href={href} className="block text-sm text-white/55 hover:text-white transition-colors">
                   {label}
                 </Link>
               ))}
@@ -94,42 +91,37 @@ export default function Footer() {
             <h4 className="font-bold text-sm mb-4 text-white">Usluge</h4>
             <div className="space-y-2.5">
               {USLUGE_LINKS.map(({ label, href }) => (
-                <Link
-                  key={label}
-                  href={href}
-                  className="block text-sm text-white/55 hover:text-white transition-colors"
-                >
+                <Link key={label} href={href} className="block text-sm text-white/55 hover:text-white transition-colors">
                   {label}
                 </Link>
               ))}
             </div>
           </div>
 
-          {/* Kompanija */}
+          {/* Kompanija + contact */}
           <div>
             <h4 className="font-bold text-sm mb-4 text-white">Kompanija</h4>
-            <div className="space-y-2.5">
+            <div className="space-y-2.5 mb-6">
               {KOMPANIJA_LINKS.map(({ label, href }) => (
-                <Link
-                  key={label}
-                  href={href}
-                  className="block text-sm text-white/55 hover:text-white transition-colors"
-                >
+                <Link key={label} href={href} className="block text-sm text-white/55 hover:text-white transition-colors">
                   {label}
                 </Link>
               ))}
             </div>
-            <div className="mt-6 space-y-4">
+            <div className="space-y-4">
               <div>
                 <p className="text-xs font-bold text-white/40 uppercase tracking-wider mb-1">Ured</p>
-                <p className="text-xs text-white/55 leading-relaxed">Paromlinska 53e<br />71000 Sarajevo, BiH</p>
+                <p className="text-xs text-white/55 leading-relaxed whitespace-pre-line">{s.site_address}</p>
               </div>
               <div>
                 <p className="text-xs font-bold text-white/40 uppercase tracking-wider mb-1">Salon i autopraonica</p>
-                <p className="text-xs text-white/55 leading-relaxed">Džemala Bijedića 168<br />71000 Sarajevo, BiH</p>
+                <p className="text-xs text-white/55 leading-relaxed whitespace-pre-line">{s.site_address_showroom}</p>
               </div>
-              <a href="tel:+38761199645" className="block text-xs text-primary hover:opacity-75 transition-opacity font-semibold">
-                +387 61 199 645
+              <a
+                href={`tel:${s.site_phone.replace(/\s/g, "")}`}
+                className="block text-xs text-primary hover:opacity-75 transition-opacity font-semibold"
+              >
+                {s.site_phone}
               </a>
             </div>
           </div>
