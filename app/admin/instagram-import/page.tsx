@@ -248,6 +248,22 @@ function parseVehicleFromCaption(caption: string): ParsedVehicle {
     }
   }
 
+  // Fallback: scan all lines for a price pattern (case-sensitive KM/BAM/EUR/€ to avoid km=kilometres)
+  if (!result.price) {
+    for (const raw of lines) {
+      const m = raw.match(/(\b\d[\d\s.]*\d|\d)\s*(KM|BAM|EUR|€)\b/);
+      if (m) {
+        const num = parseInt(m[1].replace(/[\s.]/g, ""), 10);
+        if (num >= 500 && num <= 500000) {
+          result.price = String(num);
+          const c = m[2].toUpperCase();
+          result.currency = c === "KM" ? "BAM" : c === "€" ? "EUR" : c;
+          break;
+        }
+      }
+    }
+  }
+
   if (features.length) result.features = features.join(", ");
 
   return result;
@@ -258,6 +274,7 @@ function parseVehicleFromCaption(caption: string): ParsedVehicle {
 
 function makeDefaultVehicleForm(caption: string): VehicleForm {
   const p = parseVehicleFromCaption(caption);
+  const isSold = /prodano|prodana|sold/i.test(caption);
   return {
     brand: p.brand ?? "",
     model: p.model ?? "",
@@ -274,7 +291,7 @@ function makeDefaultVehicleForm(caption: string): VehicleForm {
     seats: p.seats ?? "",
     features: p.features ?? "",
     description: caption,
-    status: "available",
+    status: isSold ? "sold" : "available",
   };
 }
 
@@ -390,7 +407,8 @@ async function parseInstagramZip(file: File): Promise<ParsedPost[]> {
     });
   }
 
-  return posts;
+  // Sort ascending so oldest is inserted first; newest gets latest created_at and appears first in DB
+  return posts.sort((a, b) => a.timestamp - b.timestamp);
 }
 
 // ─── Mini carousel (for review cards) ────────────────────────────────────────
@@ -682,15 +700,13 @@ export default function InstagramImportPage() {
       try {
         if (entry.destination === "vehicle") {
           const vf = entry.vehicleForm;
-          if (!vf.brand.trim() || !vf.model.trim()) {
-            importResults.push({ id: entry.post.id, label: "Vozilo (bez naziva)", ok: false, error: "Marka i model su obavezni" });
-            continue;
-          }
+          const brand = vf.brand.trim() || "DODAJ NAZIV";
+          const model = vf.model.trim() || "DODAJ MODEL";
           const imageUrls = await uploadImages(entry.post.images, "vehicles", "instagram");
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const { error } = await (supabase.from("vehicles") as any).insert({
-            brand: vf.brand.trim(),
-            model: vf.model.trim(),
+            brand,
+            model,
             year: Number(vf.year) || new Date().getFullYear(),
             mileage: Number(vf.mileage) || 0,
             fuel_type: vf.fuel_type,
@@ -710,7 +726,7 @@ export default function InstagramImportPage() {
             is_featured: false,
           });
           if (error) throw new Error(error.message);
-          importResults.push({ id: entry.post.id, label: `${vf.brand} ${vf.model}`, ok: true });
+          importResults.push({ id: entry.post.id, label: `${brand} ${model}`, ok: true });
 
         } else if (entry.destination === "news") {
           const nf = entry.newsForm;

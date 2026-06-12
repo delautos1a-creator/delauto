@@ -51,7 +51,6 @@ export default async function HomePage() {
     { data: news },
     { data: partners },
     { data: services },
-    { count: soldCount },
     { count: reservedCount },
   ] = await Promise.all([
     supabase
@@ -87,14 +86,10 @@ export default async function HomePage() {
     supabase
       .from("vehicles")
       .select("*", { count: "exact", head: true })
-      .eq("status", "sold"),
-    supabase
-      .from("vehicles")
-      .select("*", { count: "exact", head: true })
       .eq("status", "reserved"),
   ]);
 
-  const displaySold = SOLD_BASE + (soldCount ?? 0);
+  const displaySold = SOLD_BASE;
   const displayReserved = Math.max(reservedCount ?? 0, 2);
 
   return (

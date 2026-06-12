@@ -85,7 +85,11 @@ export default function VehicleDetailPage() {
                 images={v.images ?? []}
                 alt={`${v.brand} ${v.model}`}
                 badge={
-                  v.status === "reserved" ? (
+                  v.status === "sold" ? (
+                    <span className="absolute top-3 right-3 text-xs font-bold px-3 py-1 rounded-full bg-red-500 text-white z-10">
+                      Prodano
+                    </span>
+                  ) : v.status === "reserved" ? (
                     <span className="absolute top-3 right-3 text-xs font-bold px-3 py-1 rounded-full bg-amber-400 text-amber-900 z-10">
                       Rezervisano
                     </span>
@@ -141,22 +145,30 @@ export default function VehicleDetailPage() {
 
               {/* CTA buttons */}
               <div className="space-y-3">
-                {v.status === "available" && (
-                  <button
-                    onClick={() => setBookingOpen(true)}
-                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
-                  >
-                    <CalendarCheck className="w-4 h-4" />
-                    Zakaži test vožnju
-                  </button>
+                {v.status === "sold" ? (
+                  <div className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold bg-red-500/10 text-red-400 border border-red-500/20">
+                    Ovo vozilo je prodano
+                  </div>
+                ) : (
+                  <>
+                    {v.status === "available" && (
+                      <button
+                        onClick={() => setBookingOpen(true)}
+                        className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                      >
+                        <CalendarCheck className="w-4 h-4" />
+                        Zakaži test vožnju
+                      </button>
+                    )}
+                    <Link
+                      href={`/kontakt?vozilo=${encodeURIComponent(`${v.brand} ${v.model} ${v.year}`)}`}
+                      className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-semibold border border-border text-foreground hover:bg-card transition-colors"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                      Pošalji upit
+                    </Link>
+                  </>
                 )}
-                <Link
-                  href={`/kontakt?vozilo=${encodeURIComponent(`${v.brand} ${v.model} ${v.year}`)}`}
-                  className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-semibold border border-border text-foreground hover:bg-card transition-colors"
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  Pošalji upit
-                </Link>
               </div>
             </div>
           </div>
