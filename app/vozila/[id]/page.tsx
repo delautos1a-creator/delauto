@@ -1,15 +1,12 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { notFound } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 import Navbar from "@/components/public/navbar";
 import Footer from "@/components/public/footer";
-import BookingModal from "@/components/public/booking-modal";
 import ImageCarousel from "@/components/public/image-carousel";
+import VehicleBookingButton from "@/components/public/vehicle-booking-button";
 import Link from "next/link";
 import type { Vehicle } from "@/types/database";
-import { ArrowLeft, CalendarCheck, MessageSquare, Gauge, Fuel, Settings2, Calendar, Palette, DoorOpen, Users, Car } from "lucide-react";
+import { ArrowLeft, MessageSquare, Gauge, Fuel, Settings2, Calendar, Palette, DoorOpen, Users, Car } from "lucide-react";
 
 const FUEL_LABELS: Record<string, string> = {
   petrol: "Benzin", diesel: "Diesel", electric: "Električno", hybrid: "Hibrid", lpg: "LPG",
@@ -19,35 +16,15 @@ const TRANS_LABELS: Record<string, string> = {
   manual: "Manuelni", automatic: "Automatski",
 };
 
-export default function VehicleDetailPage() {
-  const { id } = useParams<{ id: string }>();
-  const [vehicle, setVehicle] = useState<Vehicle | null | "loading">("loading");
-  const [bookingOpen, setBookingOpen] = useState(false);
+export default async function VehicleDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data } = await supabase.from("vehicles").select("*").eq("id", id).single();
 
-  useEffect(() => {
-    const supabase = createClient();
-    supabase.from("vehicles").select("*").eq("id", id).single().then(({ data }) => {
-      setVehicle((data as Vehicle) ?? null);
-    });
-  }, [id]);
+  if (!data) notFound();
+  const v = data as Vehicle;
 
-  if (vehicle === "loading") {
-    return (
-      <>
-        <Navbar />
-        <main className="min-h-screen bg-background">
-          <div className="max-w-5xl mx-auto px-4 py-12">
-            <div className="h-96 bg-card rounded-2xl animate-pulse" />
-          </div>
-        </main>
-        <Footer />
-      </>
-    );
-  }
-
-  if (!vehicle) return null;
-
-  const v = vehicle;
+  const vehicleName = `${v.brand} ${v.model} ${v.year}`;
 
   const specs = [
     { icon: Calendar, label: "Godište", value: String(v.year) },
@@ -116,6 +93,7 @@ export default function VehicleDetailPage() {
               {v.body_type && (
                 <p className="text-muted-foreground text-sm mb-4">{v.year} · {v.body_type}</p>
               )}
+
               {v.status !== "sold" && (
                 <p className="text-4xl font-black text-primary mb-6">
                   {v.price.toLocaleString("de-DE")} {v.currency}
@@ -161,16 +139,10 @@ export default function VehicleDetailPage() {
                 ) : (
                   <>
                     {v.status === "available" && (
-                      <button
-                        onClick={() => setBookingOpen(true)}
-                        className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
-                      >
-                        <CalendarCheck className="w-4 h-4" />
-                        Zakaži test vožnju
-                      </button>
+                      <VehicleBookingButton vehicleId={v.id} vehicleName={vehicleName} />
                     )}
                     <Link
-                      href={`/kontakt?vozilo=${encodeURIComponent(`${v.brand} ${v.model} ${v.year}`)}`}
+                      href={`/kontakt?vozilo=${encodeURIComponent(vehicleName)}`}
                       className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-semibold border border-border text-foreground hover:bg-card transition-colors"
                     >
                       <MessageSquare className="w-4 h-4" />
@@ -194,13 +166,6 @@ export default function VehicleDetailPage() {
         </div>
       </main>
       <Footer />
-
-      <BookingModal
-        open={bookingOpen}
-        onClose={() => setBookingOpen(false)}
-        vehicleId={v.id}
-        vehicleName={`${v.brand} ${v.model} ${v.year}`}
-      />
     </>
   );
 }
