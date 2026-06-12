@@ -6,9 +6,10 @@ import { createClient } from "@/lib/supabase/client";
 import Navbar from "@/components/public/navbar";
 import Footer from "@/components/public/footer";
 import BookingModal from "@/components/public/booking-modal";
+import ImageCarousel from "@/components/public/image-carousel";
 import Link from "next/link";
 import type { Vehicle } from "@/types/database";
-import { Car, ArrowLeft, CalendarCheck, MessageSquare, Gauge, Fuel, Settings2, Calendar, Palette, DoorOpen, Users } from "lucide-react";
+import { ArrowLeft, CalendarCheck, MessageSquare, Gauge, Fuel, Settings2, Calendar, Palette, DoorOpen, Users, Car } from "lucide-react";
 
 const FUEL_LABELS: Record<string, string> = {
   petrol: "Benzin", diesel: "Diesel", electric: "Električno", hybrid: "Hibrid", lpg: "LPG",
@@ -22,7 +23,6 @@ export default function VehicleDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [vehicle, setVehicle] = useState<Vehicle | null | "loading">("loading");
   const [bookingOpen, setBookingOpen] = useState(false);
-  const [activeImage, setActiveImage] = useState(0);
 
   useEffect(() => {
     const supabase = createClient();
@@ -81,40 +81,17 @@ export default function VehicleDetailPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Images */}
             <div>
-              <div className="relative rounded-2xl overflow-hidden mb-3 border border-border">
-                {v.images?.[activeImage] ? (
-                  <img
-                    src={v.images[activeImage]}
-                    alt={`${v.brand} ${v.model}`}
-                    className="w-full aspect-video object-cover"
-                  />
-                ) : (
-                  <div className="w-full aspect-video bg-secondary flex items-center justify-center">
-                    <Car className="w-16 h-16 text-muted-foreground/20" />
-                  </div>
-                )}
-                {v.status === "reserved" && (
-                  <span className="absolute top-3 right-3 text-xs font-bold px-3 py-1 rounded-full bg-amber-400 text-amber-900">
-                    Rezervisano
-                  </span>
-                )}
-              </div>
-
-              {v.images && v.images.length > 1 && (
-                <div className="grid grid-cols-4 gap-2">
-                  {v.images.slice(0, 8).map((img: string, i: number) => (
-                    <button
-                      key={i}
-                      onClick={() => setActiveImage(i)}
-                      className={`aspect-square rounded-xl overflow-hidden border-2 transition-colors ${
-                        activeImage === i ? "border-primary" : "border-border hover:border-primary/40"
-                      }`}
-                    >
-                      <img src={img} alt="" className="w-full h-full object-cover" />
-                    </button>
-                  ))}
-                </div>
-              )}
+              <ImageCarousel
+                images={v.images ?? []}
+                alt={`${v.brand} ${v.model}`}
+                badge={
+                  v.status === "reserved" ? (
+                    <span className="absolute top-3 right-3 text-xs font-bold px-3 py-1 rounded-full bg-amber-400 text-amber-900 z-10">
+                      Rezervisano
+                    </span>
+                  ) : null
+                }
+              />
             </div>
 
             {/* Details */}

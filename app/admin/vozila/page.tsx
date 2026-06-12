@@ -13,7 +13,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Edit, Trash2, Car, Upload, X, ImageIcon } from "lucide-react";
+import Link from "next/link";
+import { Plus, Edit, Trash2, Car, Upload, X, ImageIcon, GalleryThumbnails } from "lucide-react";
 import { useForm, Controller, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -246,9 +247,16 @@ export default function AdminVehicles() {
           <h1 className="text-2xl font-black">Vozila</h1>
           <p className="text-sm text-muted-foreground">{vehicles.length} vozila ukupno</p>
         </div>
-        <Button onClick={openNew} className="gap-2">
-          <Plus className="w-4 h-4" /> Dodaj vozilo
-        </Button>
+        <div className="flex gap-2">
+          <Link href="/portal/instagram-import">
+            <Button variant="outline" className="gap-2">
+              <GalleryThumbnails className="w-4 h-4" /> Instagram Uvoz
+            </Button>
+          </Link>
+          <Button onClick={openNew} className="gap-2">
+            <Plus className="w-4 h-4" /> Dodaj vozilo
+          </Button>
+        </div>
       </div>
 
       {loading ? (

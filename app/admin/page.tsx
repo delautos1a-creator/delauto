@@ -99,13 +99,13 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard label="Sva vozila" value={v?.totalVehicles} icon={Car} color="bg-primary/10 text-primary" link="/admin/vozila" />
-        <StatCard label="Dostupna" value={v?.availableVehicles} icon={CheckCircle2} color="bg-green-500/10 text-green-400" link="/admin/vozila" />
-        <StatCard label="Rezervisana" value={v?.reservedVehicles} icon={Clock} color="bg-yellow-500/10 text-yellow-400" link="/admin/vozila" />
-        <StatCard label="Prodana" value={v?.soldVehicles} icon={TrendingUp} color="bg-blue-500/10 text-blue-400" link="/admin/vozila" />
-        <StatCard label="Uskoro" value={v?.upcomingVehicles} icon={Car} color="bg-purple-500/10 text-purple-400" link="/admin/vozila" />
-        <StatCard label="Novi upiti" value={v?.newInquiries} icon={MessageSquare} color="bg-red-500/10 text-red-400" link="/admin/upiti" />
-        <StatCard label="Nova buk." value={v?.newBookings} icon={Calendar} color="bg-orange-500/10 text-orange-400" link="/admin/rezervacije" />
+        <StatCard label="Sva vozila" value={v?.totalVehicles} icon={Car} color="bg-primary/10 text-primary" link="/portal/vozila" />
+        <StatCard label="Dostupna" value={v?.availableVehicles} icon={CheckCircle2} color="bg-green-500/10 text-green-400" link="/portal/vozila" />
+        <StatCard label="Rezervisana" value={v?.reservedVehicles} icon={Clock} color="bg-yellow-500/10 text-yellow-400" link="/portal/vozila" />
+        <StatCard label="Prodana" value={v?.soldVehicles} icon={TrendingUp} color="bg-blue-500/10 text-blue-400" link="/portal/vozila" />
+        <StatCard label="Uskoro" value={v?.upcomingVehicles} icon={Car} color="bg-purple-500/10 text-purple-400" link="/portal/vozila" />
+        <StatCard label="Novi upiti" value={v?.newInquiries} icon={MessageSquare} color="bg-red-500/10 text-red-400" link="/portal/upiti" />
+        <StatCard label="Nova buk." value={v?.newBookings} icon={Calendar} color="bg-orange-500/10 text-orange-400" link="/portal/rezervacije" />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -114,11 +114,11 @@ export default function AdminDashboard() {
             <h2 className="font-bold mb-4">Brze akcije</h2>
             <div className="space-y-2">
               {[
-                { label: "Dodaj novo vozilo", href: "/admin/vozila", highlight: true },
-                { label: "Nova operacija", href: "/admin/operacije" },
-                { label: "Nova vijest", href: "/admin/vijesti" },
-                { label: "Pregled upita", href: "/admin/upiti" },
-                { label: "Pregled rezervacija", href: "/admin/rezervacije" },
+                { label: "Dodaj novo vozilo", href: "/portal/vozila", highlight: true },
+                { label: "Nova operacija", href: "/portal/operacije" },
+                { label: "Nova vijest", href: "/portal/vijesti" },
+                { label: "Pregled upita", href: "/portal/upiti" },
+                { label: "Pregled rezervacija", href: "/portal/rezervacije" },
               ].map(({ label, href, highlight }) => (
                 <Link
                   key={href}
@@ -141,11 +141,11 @@ export default function AdminDashboard() {
             <h2 className="font-bold mb-4">Pregled po sekcijama</h2>
             <div className="space-y-2">
               {[
-                { label: "Vozila", href: "/admin/vozila" },
-                { label: "Vijesti", href: "/admin/vijesti" },
-                { label: "Recenzije", href: "/admin/recenzije" },
-                { label: "Partneri", href: "/admin/partneri" },
-                { label: "Postavke", href: "/admin/postavke" },
+                { label: "Vozila", href: "/portal/vozila" },
+                { label: "Vijesti", href: "/portal/vijesti" },
+                { label: "Recenzije", href: "/portal/recenzije" },
+                { label: "Partneri", href: "/portal/partneri" },
+                { label: "Postavke", href: "/portal/postavke" },
               ].map(({ label, href }) => (
                 <Link
                   key={href}
