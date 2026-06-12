@@ -14,7 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import Link from "next/link";
-import { Plus, Edit, Trash2, Car, Upload, X, ImageIcon, GalleryThumbnails } from "lucide-react";
+import { Plus, Edit, Trash2, Car, Upload, X, ImageIcon, GalleryThumbnails, Search } from "lucide-react";
 import { useForm, Controller, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -168,6 +168,9 @@ export default function AdminVehicles() {
   const [editing, setEditing] = useState<Vehicle | null>(null);
   const [images, setImages] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [onlyService, setOnlyService] = useState(false);
 
   const { register, handleSubmit, reset, control, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema) as Resolver<FormData>,
@@ -241,12 +244,34 @@ export default function AdminVehicles() {
     loadVehicles();
   };
 
+  const filtered = vehicles.filter((v) => {
+    if (statusFilter !== "all" && v.status !== statusFilter) return false;
+    if (onlyService && !v.is_service_sale) return false;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      if (!`${v.brand} ${v.model}`.toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
+
+  const STATUS_FILTERS = [
+    { key: "all", label: "Sva" },
+    { key: "available", label: "Dostupna" },
+    { key: "reserved", label: "Rezervisana" },
+    { key: "upcoming", label: "Uskoro" },
+    { key: "sold", label: "Prodana" },
+  ];
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-2xl font-black">Vozila</h1>
-          <p className="text-sm text-muted-foreground">{vehicles.length} vozila ukupno</p>
+          <p className="text-sm text-muted-foreground">
+            {filtered.length !== vehicles.length
+              ? `${filtered.length} / ${vehicles.length} vozila`
+              : `${vehicles.length} vozila ukupno`}
+          </p>
         </div>
         <div className="flex gap-2">
           <Link href="/portal/instagram-import">
@@ -260,18 +285,61 @@ export default function AdminVehicles() {
         </div>
       </div>
 
+      {/* Filter bar */}
+      <div className="flex flex-wrap gap-3 mb-6 items-center">
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+          <Input
+            className="pl-8 h-8 text-sm w-48"
+            placeholder="Pretraži vozila..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        {/* Status tabs */}
+        <div className="flex gap-1">
+          {STATUS_FILTERS.map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setStatusFilter(key)}
+              className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                statusFilter === key
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Service sale toggle */}
+        <button
+          onClick={() => setOnlyService((v) => !v)}
+          className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+            onlyService
+              ? "bg-violet-600 text-white"
+              : "bg-secondary text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Uslužna prodaja
+        </button>
+      </div>
+
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-48 rounded-xl" />)}
         </div>
-      ) : vehicles.length === 0 ? (
+      ) : filtered.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground">
           <Car className="w-12 h-12 mx-auto mb-4 opacity-30" />
-          <p>Nema vozila. Dodajte prvo vozilo.</p>
+          <p>{vehicles.length === 0 ? "Nema vozila. Dodajte prvo vozilo." : "Nema vozila koji odgovaraju filteru."}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {vehicles.map((v) => (
+          {filtered.map((v) => (
             <Card key={v.id} className="border-border overflow-hidden">
               {v.images?.[0] ? (
                 <img src={v.images[0]} alt={`${v.brand} ${v.model}`} className="w-full h-40 object-cover" />
