@@ -15,7 +15,13 @@ import { Controller, useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2, ConciergeBell, Upload, X } from "lucide-react";
+import { Plus, Edit, Trash2, ConciergeBell, Upload, X, CalendarClock } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const ALL_SLOTS = [
+  "07:00","08:00","09:00","10:00","11:00","12:00",
+  "13:00","14:00","15:00","16:00","17:00","18:00","19:00",
+];
 
 const schema = z.object({
   name: z.string().min(1, "Obavezno"),
@@ -23,8 +29,18 @@ const schema = z.object({
   price_from: z.coerce.number().optional(),
   price_unit: z.string().default("KM"),
   is_active: z.boolean(),
+  is_schedulable: z.boolean(),
+  schedule_from: z.string().optional(),
+  schedule_to: z.string().optional(),
+  schedule_time_from: z.string().optional(),
+  schedule_time_to: z.string().optional(),
+  schedule_weekdays: z.boolean(),
+  schedule_saturday: z.boolean(),
+  schedule_sunday: z.boolean(),
   sort_order: z.coerce.number(),
 });
+
+const toHHMM = (t: string | null | undefined) => t ? t.slice(0, 5) : undefined;
 
 type FormData = z.infer<typeof schema>;
 
@@ -39,10 +55,12 @@ export default function AdminUsluge() {
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, reset, control, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema) as Resolver<FormData>,
-    defaultValues: { is_active: true, sort_order: 0, price_unit: "KM" },
+    defaultValues: { is_active: true, is_schedulable: false, sort_order: 0, price_unit: "KM" },
   });
+
+  const isSchedulable = watch("is_schedulable");
 
   const load = async () => {
     const { data } = await supabase.from("services").select("*").order("sort_order");
@@ -55,7 +73,7 @@ export default function AdminUsluge() {
   const openNew = () => {
     setEditing(null);
     setImageUrl("");
-    reset({ is_active: true, sort_order: services.length, price_unit: "KM" });
+    reset({ is_active: true, is_schedulable: false, sort_order: services.length, price_unit: "KM", schedule_time_from: "09:00", schedule_time_to: "17:00", schedule_weekdays: true, schedule_saturday: false, schedule_sunday: false });
     setOpen(true);
   };
 
@@ -68,6 +86,14 @@ export default function AdminUsluge() {
       price_from: s.price_from ?? undefined,
       price_unit: s.price_unit,
       is_active: s.is_active,
+      is_schedulable: s.is_schedulable ?? false,
+      schedule_from: s.schedule_from ?? "",
+      schedule_to: s.schedule_to ?? "",
+      schedule_time_from: toHHMM(s.schedule_time_from) ?? "09:00",
+      schedule_time_to: toHHMM(s.schedule_time_to) ?? "17:00",
+      schedule_weekdays: s.schedule_weekdays ?? true,
+      schedule_saturday: s.schedule_saturday ?? false,
+      schedule_sunday: s.schedule_sunday ?? false,
       sort_order: s.sort_order,
     });
     setOpen(true);
@@ -91,7 +117,14 @@ export default function AdminUsluge() {
       ...data,
       image: imageUrl || null,
       description: data.description || null,
-      price_from: data.price_from ?? null,
+      price_from: data.price_from || null,
+      schedule_from: data.is_schedulable && data.schedule_from ? data.schedule_from : null,
+      schedule_to: data.is_schedulable && data.schedule_to ? data.schedule_to : null,
+      schedule_time_from: data.is_schedulable && data.schedule_time_from ? data.schedule_time_from : null,
+      schedule_time_to: data.is_schedulable && data.schedule_time_to ? data.schedule_time_to : null,
+      schedule_weekdays: data.is_schedulable ? (data.schedule_weekdays ?? true) : true,
+      schedule_saturday: data.is_schedulable ? (data.schedule_saturday ?? false) : false,
+      schedule_sunday: data.is_schedulable ? (data.schedule_sunday ?? false) : false,
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = editing
@@ -143,12 +176,24 @@ export default function AdminUsluge() {
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm">{s.name}</p>
-                  {s.price_from && (
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-sm">{s.name}</p>
+                    {s.is_schedulable && (
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/15 text-primary">
+                        Zakazivanje
+                      </span>
+                    )}
+                  </div>
+                  {s.price_from ? (
                     <p className="text-xs text-primary font-bold">od {s.price_from} {s.price_unit}</p>
+                  ) : null}
+                  {s.is_schedulable && s.schedule_from && s.schedule_to && (
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {s.schedule_from} → {s.schedule_to}
+                    </p>
                   )}
                   {s.description && (
-                    <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{s.description}</p>
+                    <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{s.description}</p>
                   )}
                   {!s.is_active && <p className="text-xs text-amber-400/80 mt-0.5">Neaktivna</p>}
                 </div>
@@ -167,7 +212,7 @@ export default function AdminUsluge() {
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing ? "Uredi uslugu" : "Dodaj uslugu"}</DialogTitle>
           </DialogHeader>
@@ -194,7 +239,7 @@ export default function AdminUsluge() {
                 onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0])}
               />
               {imageUrl ? (
-                <div className="relative inline-block">
+                <div className="relative inline-block w-full">
                   <img src={imageUrl} alt="Preview" className="w-full h-32 object-cover rounded-xl" />
                   <button
                     type="button"
@@ -235,6 +280,7 @@ export default function AdminUsluge() {
               </div>
             </div>
 
+            {/* Toggles */}
             <div className="flex items-center gap-3 bg-secondary rounded-xl px-4 py-3">
               <Controller name="is_active" control={control} render={({ field }) => (
                 <Switch checked={field.value} onCheckedChange={field.onChange} id="active" />
@@ -244,6 +290,72 @@ export default function AdminUsluge() {
                 <p className="text-xs text-muted-foreground">Vidljiva na stranici Usluge</p>
               </div>
             </div>
+
+            <div className="flex items-center gap-3 bg-secondary rounded-xl px-4 py-3">
+              <Controller name="is_schedulable" control={control} render={({ field }) => (
+                <Switch checked={field.value} onCheckedChange={field.onChange} id="schedulable" />
+              )} />
+              <div>
+                <CalendarClock className="w-4 h-4 text-primary mb-0.5" />
+                <Label htmlFor="schedulable" className="cursor-pointer">Zakazivanje</Label>
+                <p className="text-xs text-muted-foreground">Kupci mogu zakazati ovu uslugu online</p>
+              </div>
+            </div>
+
+            {/* Date + time range — only when schedulable */}
+            {isSchedulable && (
+              <div className="grid grid-cols-2 gap-3 bg-primary/5 border border-primary/20 rounded-xl p-4">
+                <p className="col-span-2 text-xs font-bold text-primary uppercase tracking-wider">Period zakazivanja</p>
+                <div className="space-y-1">
+                  <Label>Od datuma *</Label>
+                  <Input {...register("schedule_from")} type="date" />
+                </div>
+                <div className="space-y-1">
+                  <Label>Do datuma *</Label>
+                  <Input {...register("schedule_to")} type="date" />
+                </div>
+                <div className="space-y-1">
+                  <Label>Radno od</Label>
+                  <Controller name="schedule_time_from" control={control} render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value ?? "09:00"}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {ALL_SLOTS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  )} />
+                </div>
+                <div className="space-y-1">
+                  <Label>Radno do</Label>
+                  <Controller name="schedule_time_to" control={control} render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value ?? "17:00"}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {ALL_SLOTS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  )} />
+                </div>
+                <div className="col-span-2 space-y-2">
+                  <p className="text-xs font-semibold text-foreground">Dostupni dani</p>
+                  {[
+                    { field: "schedule_weekdays" as const, label: "Radni dani (Pon – Pet)" },
+                    { field: "schedule_saturday" as const, label: "Subota" },
+                    { field: "schedule_sunday" as const, label: "Nedjelja" },
+                  ].map(({ field, label }) => (
+                    <div key={field} className="flex items-center gap-3">
+                      <Controller name={field} control={control} render={({ field: f }) => (
+                        <Switch checked={f.value} onCheckedChange={f.onChange} id={field} />
+                      )} />
+                      <Label htmlFor={field} className="cursor-pointer font-normal">{label}</Label>
+                    </div>
+                  ))}
+                </div>
+                <p className="col-span-2 text-xs text-muted-foreground">
+                  Kupci mogu zakazati termin samo unutar ovog perioda, radnog vremena i odabranih dana.
+                </p>
+              </div>
+            )}
 
             <div className="flex gap-2">
               <Button type="submit" disabled={saving} className="flex-1">

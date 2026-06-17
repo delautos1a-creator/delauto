@@ -13,8 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import Link from "next/link";
-import { Plus, Edit, Trash2, Car, Upload, X, ImageIcon, GalleryThumbnails, Search } from "lucide-react";
+import { Plus, Edit, Trash2, Car, Upload, X, ImageIcon, Search, CheckSquare } from "lucide-react";
 import { useForm, Controller, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -60,22 +59,55 @@ const STATUS_LABELS: Record<string, string> = {
   upcoming: "Uskoro",
 };
 
+const MAX_IMAGES = 5;
+
+async function compressImage(file: File): Promise<Blob> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const MAX_W = 1920;
+      let { width, height } = img;
+      if (width > MAX_W) { height = Math.round((height * MAX_W) / width); width = MAX_W; }
+      const canvas = document.createElement("canvas");
+      canvas.width = width; canvas.height = height;
+      canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
+      URL.revokeObjectURL(url);
+      canvas.toBlob((blob) => resolve(blob!), "image/jpeg", 0.82);
+    };
+    img.src = url;
+  });
+}
+
 function ImageUploader({ images, onChange }: { images: string[]; onChange: (imgs: string[]) => void }) {
   const supabase = createClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState("");
   const [urlInput, setUrlInput] = useState("");
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? []);
-    if (!files.length) return;
+    const all = Array.from(e.target.files ?? []);
+    if (!all.length) return;
+
+    const remaining = MAX_IMAGES - images.length;
+    if (remaining <= 0) {
+      toast.error(`Maksimalno ${MAX_IMAGES} slika po vozilu.`);
+      return;
+    }
+    const files = all.slice(0, remaining);
+    if (all.length > remaining) toast.warning(`Dodano je samo ${remaining} od ${all.length} slika (maksimum ${MAX_IMAGES}).`);
+
     setUploading(true);
     try {
       const uploaded: string[] = [];
-      for (const file of files) {
-        const ext = file.name.split(".").pop();
-        const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-        const { error } = await supabase.storage.from("vehicles").upload(path, file);
+      for (let i = 0; i < files.length; i++) {
+        setUploadProgress(`Kompresija i upload ${i + 1}/${files.length}...`);
+        const compressed = await compressImage(files[i]);
+        const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+        const { error } = await supabase.storage.from("vehicles").upload(path, compressed, { contentType: "image/jpeg" });
         if (error) throw error;
         const { data } = supabase.storage.from("vehicles").getPublicUrl(path);
         uploaded.push(data.publicUrl);
@@ -86,6 +118,7 @@ function ImageUploader({ images, onChange }: { images: string[]; onChange: (imgs
       toast.error("Greška pri učitavanju slika");
     } finally {
       setUploading(false);
+      setUploadProgress("");
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
@@ -95,6 +128,25 @@ function ImageUploader({ images, onChange }: { images: string[]; onChange: (imgs
     if (!trimmed) return;
     onChange([...images, trimmed]);
     setUrlInput("");
+  };
+
+  const toggleSelect = (i: number) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(i) ? next.delete(i) : next.add(i);
+      return next;
+    });
+  };
+
+  const deleteSelected = () => {
+    onChange(images.filter((_, i) => !selected.has(i)));
+    setSelected(new Set());
+    setSelectMode(false);
+  };
+
+  const exitSelectMode = () => {
+    setSelectMode(false);
+    setSelected(new Set());
   };
 
   return (
@@ -108,7 +160,7 @@ function ImageUploader({ images, onChange }: { images: string[]; onChange: (imgs
         />
         <Button type="button" variant="outline" size="sm" onClick={addUrl}>Dodaj</Button>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <input
           ref={fileInputRef}
           type="file"
@@ -121,18 +173,47 @@ function ImageUploader({ images, onChange }: { images: string[]; onChange: (imgs
           type="button"
           variant="outline"
           size="sm"
-          disabled={uploading}
+          disabled={uploading || images.length >= MAX_IMAGES}
           onClick={() => fileInputRef.current?.click()}
           className="gap-2"
         >
           <Upload className="w-4 h-4" />
-          {uploading ? "Učitavanje..." : "Upload slika"}
+          {uploading ? uploadProgress || "Upload..." : `Upload slika (${images.length}/${MAX_IMAGES})`}
         </Button>
+        {images.length >= MAX_IMAGES && (
+          <span className="text-xs text-muted-foreground">Maksimum dostignut</span>
+        )}
+        {images.length > 0 && !selectMode && (
+          <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={() => setSelectMode(true)}>
+            <CheckSquare className="w-3.5 h-3.5" /> Selektuj
+          </Button>
+        )}
+        {selectMode && (
+          <>
+            <Button
+              type="button"
+              size="sm"
+              variant="destructive"
+              className="gap-1.5"
+              disabled={selected.size === 0}
+              onClick={deleteSelected}
+            >
+              <Trash2 className="w-3.5 h-3.5" /> Obriši ({selected.size})
+            </Button>
+            <Button type="button" variant="outline" size="sm" onClick={exitSelectMode}>
+              Odustani
+            </Button>
+          </>
+        )}
       </div>
       {images.length > 0 && (
         <div className="grid grid-cols-3 gap-2">
           {images.map((img, i) => (
-            <div key={i} className="relative aspect-video rounded-lg overflow-hidden bg-secondary group">
+            <div
+              key={i}
+              className={`relative aspect-video rounded-lg overflow-hidden bg-secondary ${selectMode ? "cursor-pointer" : ""} ${selectMode && selected.has(i) ? "ring-2 ring-red-500" : ""}`}
+              onClick={selectMode ? () => toggleSelect(i) : undefined}
+            >
               {img.startsWith("http") ? (
                 <img src={img} alt="" className="w-full h-full object-cover" />
               ) : (
@@ -140,13 +221,22 @@ function ImageUploader({ images, onChange }: { images: string[]; onChange: (imgs
                   <ImageIcon className="w-6 h-6 text-muted-foreground" />
                 </div>
               )}
-              <button
-                type="button"
-                onClick={() => onChange(images.filter((_, idx) => idx !== i))}
-                className="absolute top-1 right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <X className="w-3 h-3 text-white" />
-              </button>
+              {/* Always-visible delete button (not select mode) */}
+              {!selectMode && (
+                <button
+                  type="button"
+                  onClick={() => onChange(images.filter((_, idx) => idx !== i))}
+                  className="absolute top-1 right-1 w-6 h-6 bg-black/60 hover:bg-red-500 rounded-full flex items-center justify-center transition-colors"
+                >
+                  <X className="w-3.5 h-3.5 text-white" />
+                </button>
+              )}
+              {/* Select mode checkbox overlay */}
+              {selectMode && (
+                <div className={`absolute top-1 right-1 w-5 h-5 rounded-full border-2 flex items-center justify-center ${selected.has(i) ? "bg-red-500 border-red-500" : "bg-black/50 border-white/70"}`}>
+                  {selected.has(i) && <X className="w-3 h-3 text-white" />}
+                </div>
+              )}
               {i === 0 && (
                 <span className="absolute bottom-1 left-1 text-xs bg-primary text-primary-foreground px-1.5 py-0.5 rounded">
                   Naslovna
@@ -188,7 +278,7 @@ export default function AdminVehicles() {
   const openNew = () => {
     setEditing(null);
     setImages([]);
-    reset({ currency: "EUR", status: "available", is_featured: false, features: "", mileage: 0, price: 0, year: new Date().getFullYear() });
+    reset({ currency: "EUR", status: "available", is_featured: false, is_service_sale: false, features: "", mileage: 0, price: 0, year: new Date().getFullYear() });
     setOpen(true);
   };
 
@@ -274,12 +364,7 @@ export default function AdminVehicles() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Link href="/portal/instagram-import">
-            <Button variant="outline" className="gap-2">
-              <GalleryThumbnails className="w-4 h-4" /> Instagram Uvoz
-            </Button>
-          </Link>
-          <Button onClick={openNew} className="gap-2">
+<Button onClick={openNew} className="gap-2">
             <Plus className="w-4 h-4" /> Dodaj vozilo
           </Button>
         </div>

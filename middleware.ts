@@ -42,7 +42,11 @@ export async function middleware(request: NextRequest) {
   }
 
   // ── Rate-limit public API endpoints ─────────────────────────────────────
-  if (pathname.startsWith("/api/bookings") || pathname.startsWith("/api/inquiries")) {
+  if (
+    pathname.startsWith("/api/bookings") ||
+    pathname.startsWith("/api/inquiries") ||
+    pathname.startsWith("/api/testimonials")
+  ) {
     pruneRateLimitStore();
     if (isRateLimited(getIp(request))) {
       return new NextResponse(JSON.stringify({ error: "Too many requests" }), {
@@ -113,5 +117,6 @@ export const config = {
     "/portal",
     "/api/bookings/:path*",
     "/api/inquiries/:path*",
+    "/api/testimonials",
   ],
 };

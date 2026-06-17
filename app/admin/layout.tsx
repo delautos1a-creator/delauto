@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Menu } from "lucide-react";
 import AdminSidebar from "@/components/admin/sidebar";
+import NotificationBell from "@/components/admin/notification-bell";
 import { createClient } from "@/lib/supabase/client";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -50,7 +51,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           >
             <Menu className="w-5 h-5" />
           </button>
-          <span className="font-black text-sm">Del Auto Admin</span>
+          <span className="font-black text-sm flex-1">Del Auto Admin</span>
+          <NotificationBell />
         </div>
 
         <main className="flex-1 overflow-y-auto p-4 md:p-6">

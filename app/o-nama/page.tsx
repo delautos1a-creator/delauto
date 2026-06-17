@@ -4,12 +4,6 @@ import Footer from "@/components/public/footer";
 
 export const metadata = { title: "O nama — Del Auto" };
 
-const STATS = [
-  { value: "10+", label: "Godina iskustva" },
-  { value: "500+", label: "Zadovoljnih kupaca" },
-  { value: "1000+", label: "Uvezenih vozila" },
-];
-
 const VALUES = [
   {
     icon: "🔍",
@@ -19,7 +13,7 @@ const VALUES = [
   {
     icon: "🤝",
     title: "Povjerenje",
-    desc: "Izgradili smo odnos povjerenja s hiljadama zadovoljnih kupaca kroz godine dosljedne i poštene usluge.",
+    desc: "Izgradili smo odnos povjerenja s kupacima kroz godine dosljedne i poštene usluge.",
   },
   {
     icon: "🚗",
@@ -43,18 +37,6 @@ export default function AboutPage() {
             <p className="text-white/55">
               Pouzdani partner za uvoz i prodaju premium vozila iz Europe.
             </p>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="bg-navy border-t border-white/10">
-          <div className="max-w-4xl mx-auto px-4 py-10 grid grid-cols-3 gap-6 text-center">
-            {STATS.map(({ value, label }) => (
-              <div key={label}>
-                <p className="text-3xl md:text-4xl font-black text-primary">{value}</p>
-                <p className="text-sm text-white/50 mt-1">{label}</p>
-              </div>
-            ))}
           </div>
         </div>
 

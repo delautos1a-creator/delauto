@@ -8,6 +8,7 @@ import {
   LayoutDashboard, Car, Wrench, Newspaper, Calendar,
   MessageSquare, Star, Handshake, Settings, LogOut, Users, X, ConciergeBell,
 } from "lucide-react";
+import NotificationBell from "./notification-bell";
 
 const NAV = [
   { label: "Dashboard", href: "/portal", icon: LayoutDashboard, exact: true },
@@ -46,20 +47,24 @@ export default function AdminSidebar({ mobile, onClose, userEmail }: Props) {
   return (
     <div className={cn("flex flex-col h-full bg-card border-r border-border", mobile ? "w-full" : "w-64")}>
       {/* Header */}
-      <div className="p-4 border-b border-border flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <img
-            src="/delauto-logo.png"
-            alt="Del Auto D.O.O."
-            className="h-10 w-auto object-contain brightness-0 invert"
-          />
-          <div className="text-xs text-muted-foreground leading-none pt-0.5">Admin</div>
+      <div className="p-4 border-b border-border flex items-center justify-between gap-2">
+        <img
+          src="/delauto-logo.png"
+          alt="Del Auto D.O.O."
+          className="h-9 w-auto object-contain brightness-0 invert shrink-0"
+        />
+        <div className="flex items-center gap-1.5 ml-auto">
+          {/* Profile avatar */}
+          <div className="w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center text-xs font-bold text-muted-foreground shrink-0 uppercase">
+            {userEmail ? userEmail[0] : "A"}
+          </div>
+          <NotificationBell align="left" />
+          {mobile && onClose && (
+            <button onClick={onClose} className="text-muted-foreground hover:text-foreground ml-1">
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
-        {mobile && onClose && (
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
-            <X className="w-5 h-5" />
-          </button>
-        )}
       </div>
 
       {/* Nav */}

@@ -108,7 +108,7 @@ export default function AdminDashboard() {
         <StatCard label="Nova buk." value={v?.newBookings} icon={Calendar} color="bg-orange-500/10 text-orange-400" link="/portal/rezervacije" />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="max-w-sm">
         <Card className="border-border">
           <CardContent className="p-5">
             <h2 className="font-bold mb-4">Brze akcije</h2>
@@ -136,28 +136,6 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-border">
-          <CardContent className="p-5">
-            <h2 className="font-bold mb-4">Pregled po sekcijama</h2>
-            <div className="space-y-2">
-              {[
-                { label: "Vozila", href: "/portal/vozila" },
-                { label: "Vijesti", href: "/portal/vijesti" },
-                { label: "Recenzije", href: "/portal/recenzije" },
-                { label: "Partneri", href: "/portal/partneri" },
-                { label: "Postavke", href: "/portal/postavke" },
-              ].map(({ label, href }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  className="block px-4 py-2.5 rounded-lg text-sm font-medium bg-secondary text-foreground hover:bg-secondary/80 transition-colors"
-                >
-                  {label}
-                </Link>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );

@@ -31,7 +31,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const TYPE_LABELS: Record<string, string> = {
-  test_drive: "Test vožnja", showroom_viewing: "Razgledanje", video_viewing: "Video",
+  test_drive: "Test vožnja", showroom_viewing: "Razgledanje", video_viewing: "Video", service: "Usluga",
 };
 
 const schema = z.object({
@@ -178,6 +178,11 @@ export default function AdminBookings() {
                       {b.vehicle_name && (
                         <div className="flex items-center gap-1.5 text-muted-foreground">
                           <Car className="w-3.5 h-3.5" /> {b.vehicle_name}
+                        </div>
+                      )}
+                      {(b as any).service_name && (
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <Car className="w-3.5 h-3.5" /> {(b as any).service_name}
                         </div>
                       )}
                     </div>

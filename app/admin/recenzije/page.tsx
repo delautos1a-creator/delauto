@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import QRCode from "qrcode";
 import { createClient } from "@/lib/supabase/client";
 import type { Testimonial } from "@/types/database";
 import { Button } from "@/components/ui/button";
@@ -13,11 +14,78 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
-import { Star, Trash2, Plus } from "lucide-react";
+import { Star, Trash2, Plus, Copy, Printer, QrCode } from "lucide-react";
 import { useForm, Controller, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+
+const REVIEW_URL = "https://delauto.ba/recenzija";
+
+function QRSection() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    if (canvasRef.current) {
+      QRCode.toCanvas(canvasRef.current, REVIEW_URL, {
+        width: 160,
+        margin: 2,
+        color: { dark: "#ffffff", light: "#1a1a2e" },
+      });
+    }
+  }, []);
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(REVIEW_URL);
+    toast.success("Link kopiran");
+  };
+
+  const printQR = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const win = window.open("", "_blank");
+    if (!win) return;
+    win.document.write(`
+      <html><head><title>Del Auto – QR Recenzija</title>
+      <style>body{margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;background:#fff;color:#111;}
+      img{width:220px;height:220px;}p{margin-top:12px;font-size:14px;color:#555;}</style></head>
+      <body><img src="${canvas.toDataURL()}"/><p>${REVIEW_URL}</p></body></html>
+    `);
+    win.document.close();
+    win.focus();
+    win.print();
+  };
+
+  return (
+    <Card className="border-border mb-6">
+      <CardContent className="p-5">
+        <div className="flex items-start gap-5 flex-wrap">
+          <div className="bg-[#1a1a2e] rounded-xl p-2 shrink-0">
+            <canvas ref={canvasRef} className="rounded-lg block" />
+          </div>
+          <div className="flex-1 min-w-[200px]">
+            <div className="flex items-center gap-2 mb-1">
+              <QrCode className="w-4 h-4 text-primary" />
+              <h2 className="font-semibold text-sm">Link za recenzije</h2>
+            </div>
+            <p className="text-xs text-muted-foreground mb-3">
+              Podijelite ovaj QR kod ili link sa kupcima — recenzija se odmah šalje i čeka vašu potvrdu.
+            </p>
+            <div className="flex items-center gap-2 bg-secondary/40 rounded-lg px-3 py-2 mb-3">
+              <span className="text-xs font-mono text-primary truncate flex-1">{REVIEW_URL}</span>
+              <Button size="sm" variant="ghost" className="h-7 px-2" onClick={copyLink}>
+                <Copy className="w-3.5 h-3.5" />
+              </Button>
+            </div>
+            <Button size="sm" variant="outline" className="gap-1.5" onClick={printQR}>
+              <Printer className="w-3.5 h-3.5" /> Printaj QR
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 const schema = z.object({
   customer_name: z.string().min(1, "Obavezno"),
@@ -89,6 +157,8 @@ export default function AdminTestimonials() {
 
   return (
     <div>
+      <QRSection />
+
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-black">Recenzije</h1>

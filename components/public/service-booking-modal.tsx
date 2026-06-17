@@ -8,26 +8,39 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar, Clock, User, CheckCircle2, ChevronLeft } from "lucide-react";
+import { Calendar, Clock, CheckCircle2, ChevronLeft, ConciergeBell } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { format, isBefore, startOfToday, isSunday } from "date-fns";
+import { format, isBefore, startOfToday, parseISO } from "date-fns";
 import { toast } from "sonner";
 
-const TIME_SLOTS = [
-  "09:00", "10:00", "11:00", "12:00",
-  "13:00", "14:00", "15:00", "16:00", "17:00",
+const ALL_SLOTS = [
+  "07:00","08:00","09:00","10:00","11:00","12:00",
+  "13:00","14:00","15:00","16:00","17:00","18:00","19:00",
 ];
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  vehicleId?: string;
-  vehicleName?: string;
+  serviceId: string;
+  serviceName: string;
+  scheduleFrom: string | null;
+  scheduleTo: string | null;
+  timeFrom: string;
+  timeTo: string;
+  allowWeekdays: boolean;
+  allowSaturday: boolean;
+  allowSunday: boolean;
 }
 
 type Step = "date" | "time" | "form" | "done";
 
-export default function BookingModal({ open, onClose, vehicleId, vehicleName }: Props) {
+export default function ServiceBookingModal({
+  open, onClose,
+  serviceId, serviceName,
+  scheduleFrom, scheduleTo,
+  timeFrom, timeTo,
+  allowWeekdays, allowSaturday, allowSunday,
+}: Props) {
   const [step, setStep] = useState<Step>("date");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -39,7 +52,6 @@ export default function BookingModal({ open, onClose, vehicleId, vehicleName }: 
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // Reset on close
   const handleClose = () => {
     onClose();
     setTimeout(() => {
@@ -51,16 +63,31 @@ export default function BookingModal({ open, onClose, vehicleId, vehicleName }: 
     }, 300);
   };
 
-  // Fetch taken slots when date changes
   useEffect(() => {
     if (!selectedDate) return;
     setLoadingSlots(true);
-    const dateStr = format(selectedDate, "yyyy-MM-dd");
-    fetch(`/api/bookings?date=${dateStr}`)
+    fetch(`/api/bookings?date=${format(selectedDate, "yyyy-MM-dd")}`)
       .then((r) => r.json())
       .then(({ taken }) => setTakenSlots(taken ?? []))
       .finally(() => setLoadingSlots(false));
   }, [selectedDate]);
+
+  const today = startOfToday();
+  const from = scheduleFrom ? parseISO(scheduleFrom) : null;
+  const to = scheduleTo ? parseISO(scheduleTo) : null;
+
+  // Slots filtered to this service's working hours (strip seconds from DB values)
+  const tfNorm = timeFrom.slice(0, 5);
+  const ttNorm = timeTo.slice(0, 5);
+  const availableSlots = ALL_SLOTS.filter((s) => s >= tfNorm && s <= ttNorm);
+
+  const isDayDisabled = (date: Date) => {
+    const dow = date.getDay(); // 0=Sun, 1=Mon … 6=Sat
+    if (dow === 0 && !allowSunday) return true;
+    if (dow === 6 && !allowSaturday) return true;
+    if (dow >= 1 && dow <= 5 && !allowWeekdays) return true;
+    return false;
+  };
 
   const handleDateSelect = (date: Date | undefined) => {
     if (!date) return;
@@ -69,22 +96,16 @@ export default function BookingModal({ open, onClose, vehicleId, vehicleName }: 
     setStep("time");
   };
 
-  const handleTimeSelect = (slot: string) => {
-    setSelectedTime(slot);
-    setStep("form");
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !phone || !selectedDate || !selectedTime) return;
-
     setSubmitting(true);
-    const res = await fetch("/api/bookings", {
+    const res = await fetch("/api/service-bookings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        vehicle_id: vehicleId ?? null,
-        vehicle_name: vehicleName ?? null,
+        service_id: serviceId,
+        service_name: serviceName,
         customer_name: name,
         customer_email: email,
         customer_phone: phone,
@@ -93,46 +114,42 @@ export default function BookingModal({ open, onClose, vehicleId, vehicleName }: 
         message: message || null,
       }),
     });
-
     const data = await res.json();
     setSubmitting(false);
-
     if (!res.ok) {
-      const isEmailConflict = res.headers.get("x-conflict") === "email";
       toast.error(data.error ?? "Greška. Pokušajte ponovo.", { duration: 6000 });
-      if (res.status === 409 && !isEmailConflict) {
+      if (res.status === 409) {
         setStep("time");
-        const dateStr = format(selectedDate, "yyyy-MM-dd");
-        fetch(`/api/bookings?date=${dateStr}`)
+        fetch(`/api/bookings?date=${format(selectedDate, "yyyy-MM-dd")}`)
           .then((r) => r.json())
           .then(({ taken }) => setTakenSlots(taken ?? []));
       }
       return;
     }
-
     setStep("done");
   };
 
-  const today = startOfToday();
-
   const stepTitle: Record<Step, string> = {
-    date: "Odaberite datum",
-    time: "Odaberite termin",
-    form: "Vaši podaci",
-    done: "Rezervacija poslana",
+    date: "Odaberite datum", time: "Odaberite termin", form: "Vaši podaci", done: "Zahtjev poslan",
   };
+
+  // Build disabled rules for DayPicker
+  const disabledRules: Parameters<typeof DayPicker>[0]["disabled"] = [
+    { before: from && isBefore(from, today) ? today : (from ?? today) },
+    ...(to ? [{ after: to }] : []),
+    isDayDisabled,
+  ];
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-primary" />
-            {vehicleName ? `Test vožnja — ${vehicleName}` : "Zakaži test vožnju"}
+            <ConciergeBell className="w-5 h-5 text-primary" />
+            {serviceName}
           </DialogTitle>
         </DialogHeader>
 
-        {/* Step indicator */}
         {step !== "done" && (
           <div className="flex items-center gap-2 mb-2">
             {(["date", "time", "form"] as Step[]).map((s, i) => (
@@ -140,11 +157,9 @@ export default function BookingModal({ open, onClose, vehicleId, vehicleName }: 
                 <div className={cn(
                   "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors",
                   step === s ? "bg-primary text-primary-foreground" :
-                  ["date", "time", "form"].indexOf(step) > i ? "bg-primary/30 text-primary" :
+                  ["date","time","form"].indexOf(step) > i ? "bg-primary/30 text-primary" :
                   "bg-secondary text-muted-foreground"
-                )}>
-                  {i + 1}
-                </div>
+                )}>{i + 1}</div>
                 {i < 2 && <div className="flex-1 h-px bg-border w-8" />}
               </div>
             ))}
@@ -154,31 +169,42 @@ export default function BookingModal({ open, onClose, vehicleId, vehicleName }: 
 
         {/* STEP 1: Date */}
         {step === "date" && (
-          <div className="flex justify-center">
-            <DayPicker
-              mode="single"
-              selected={selectedDate}
-              onSelect={handleDateSelect}
-              disabled={[
-                { before: today },
-                (date) => isSunday(date),
-              ]}
-              classNames={{
-                selected: "!bg-primary !text-primary-foreground rounded-lg",
-                today: "font-bold underline",
-                disabled: "opacity-30 cursor-not-allowed",
-              }}
-            />
+          <div>
+            {(scheduleFrom || scheduleTo) && (
+              <p className="text-xs text-muted-foreground text-center mb-3">
+                {scheduleFrom && scheduleTo
+                  ? `Dostupno od ${scheduleFrom} do ${scheduleTo}`
+                  : scheduleFrom
+                  ? `Dostupno od ${scheduleFrom}`
+                  : `Dostupno do ${scheduleTo}`}
+              </p>
+            )}
+            <div className="flex justify-center">
+              <DayPicker
+                mode="single"
+                selected={selectedDate}
+                onSelect={handleDateSelect}
+                disabled={disabledRules}
+                classNames={{
+                  selected: "!bg-primary !text-primary-foreground rounded-lg",
+                  today: "font-bold underline",
+                  disabled: "opacity-30 cursor-not-allowed",
+                }}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground text-center mt-1">
+              Radno: {tfNorm}–{ttNorm}
+              {allowWeekdays && " · Pon–Pet"}
+              {allowSaturday && " · Sub"}
+              {allowSunday && " · Ned"}
+            </p>
           </div>
         )}
 
         {/* STEP 2: Time slots */}
         {step === "time" && selectedDate && (
           <div>
-            <button
-              onClick={() => setStep("date")}
-              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
-            >
+            <button onClick={() => setStep("date")} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors">
               <ChevronLeft className="w-4 h-4" />
               {format(selectedDate, "dd.MM.yyyy")}
             </button>
@@ -186,13 +212,13 @@ export default function BookingModal({ open, onClose, vehicleId, vehicleName }: 
               <div className="text-center py-8 text-muted-foreground text-sm">Učitavanje termina...</div>
             ) : (
               <div className="grid grid-cols-3 gap-2">
-                {TIME_SLOTS.map((slot) => {
+                {availableSlots.map((slot) => {
                   const taken = takenSlots.includes(slot);
                   return (
                     <button
                       key={slot}
                       disabled={taken}
-                      onClick={() => handleTimeSelect(slot)}
+                      onClick={() => { setSelectedTime(slot); setStep("form"); }}
                       className={cn(
                         "flex items-center justify-center gap-1.5 py-3 rounded-lg text-sm font-medium border transition-all",
                         taken
@@ -207,9 +233,6 @@ export default function BookingModal({ open, onClose, vehicleId, vehicleName }: 
                 })}
               </div>
             )}
-            <p className="text-xs text-muted-foreground mt-3 text-center">
-              Prekriženi termini su već zauzeti. Radimo Pon–Sub.
-            </p>
           </div>
         )}
 
@@ -225,60 +248,32 @@ export default function BookingModal({ open, onClose, vehicleId, vehicleName }: 
                 <Clock className="w-3.5 h-3.5" />
                 {selectedTime}
               </div>
-              <button
-                type="button"
-                onClick={() => setStep("time")}
-                className="ml-auto text-xs text-primary hover:underline"
-              >
+              <button type="button" onClick={() => setStep("time")} className="ml-auto text-xs text-primary hover:underline">
                 Promijeni
               </button>
             </div>
-
             <div className="space-y-1">
               <Label>Ime i prezime *</Label>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Vaše ime i prezime"
-                required
-              />
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Vaše ime i prezime" required />
             </div>
             <div className="space-y-1">
               <Label>Email *</Label>
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="vas@email.com"
-                required
-              />
+              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="vas@email.com" required />
             </div>
             <div className="space-y-1">
               <Label>Telefon *</Label>
-              <Input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value.replace(/[^\d+\s\-().]/g, ""))}
-                placeholder="+387 61 000 000"
-                maxLength={25}
-                required
-              />
+              <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value.replace(/[^\d+\s\-().]/g, ""))} placeholder="+387 61 000 000" maxLength={25} required />
               <p className="text-xs text-muted-foreground">Kontaktiraćemo vas radi potvrde.</p>
             </div>
             <div className="space-y-1">
               <Label>Napomena</Label>
-              <Textarea
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Eventualna pitanja ili napomene..."
-                rows={2}
-              />
+              <Textarea value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Eventualna pitanja..." rows={2} />
             </div>
             <Button type="submit" disabled={submitting} className="w-full">
-              {submitting ? "Slanje..." : "Pošalji zahtjev za test vožnju"}
+              {submitting ? "Slanje..." : "Pošalji zahtjev"}
             </Button>
             <p className="text-xs text-muted-foreground text-center">
-              Dobićete email potvrdu nakon što admin odobri vašu rezervaciju.
+              Dobićete email potvrdu čim admin odobri vaš termin.
             </p>
           </form>
         )}
@@ -291,7 +286,7 @@ export default function BookingModal({ open, onClose, vehicleId, vehicleName }: 
             </div>
             <h3 className="text-lg font-bold mb-2">Zahtjev poslan!</h3>
             <p className="text-sm text-muted-foreground mb-6">
-              Vaš zahtjev za test vožnju je primljen. Kontaktiraćemo vas telefonom ili emailom i potvrditi termin.
+              Vaš zahtjev za <strong>{serviceName}</strong> je primljen. Kontaktiraćemo vas telefonom ili emailom i potvrditi termin.
             </p>
             <Button onClick={handleClose} className="w-full">Zatvori</Button>
           </div>

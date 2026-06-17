@@ -1,8 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import Navbar from "@/components/public/navbar";
 import Footer from "@/components/public/footer";
+import ServiceBookingButton from "@/components/public/service-booking-button";
 import type { Service } from "@/types/database";
-import { ConciergeBell } from "lucide-react";
+import { ConciergeBell, MessageSquare } from "lucide-react";
 import Link from "next/link";
 
 export const metadata = { title: "Usluge — Del Auto" };
@@ -48,11 +49,7 @@ export default async function UslugePage() {
                   className="bg-card rounded-2xl border border-border overflow-hidden flex flex-col hover:border-primary/30 transition-colors"
                 >
                   {s.image ? (
-                    <img
-                      src={s.image}
-                      alt={s.name}
-                      className="w-full h-48 object-cover"
-                    />
+                    <img src={s.image} alt={s.name} className="w-full h-48 object-cover" />
                   ) : (
                     <div className="w-full h-48 bg-secondary flex items-center justify-center">
                       <ConciergeBell className="w-12 h-12 text-muted-foreground/25" />
@@ -65,29 +62,38 @@ export default async function UslugePage() {
                         {s.description}
                       </p>
                     )}
-                    {s.price_from && (
+                    {s.price_from ? (
                       <p className="mt-4 text-primary font-black text-xl">
                         od {s.price_from} {s.price_unit}
                       </p>
+                    ) : null}
+
+                    {s.is_schedulable ? (
+                      <ServiceBookingButton
+                        serviceId={s.id}
+                        serviceName={s.name}
+                        scheduleFrom={s.schedule_from}
+                        scheduleTo={s.schedule_to}
+                        timeFrom={s.schedule_time_from?.slice(0, 5) ?? "09:00"}
+                        timeTo={s.schedule_time_to?.slice(0, 5) ?? "17:00"}
+                        allowWeekdays={s.schedule_weekdays ?? true}
+                        allowSaturday={s.schedule_saturday ?? false}
+                        allowSunday={s.schedule_sunday ?? false}
+                      />
+                    ) : (
+                      <Link
+                        href={`/kontakt?vozilo=${encodeURIComponent(s.name)}`}
+                        className="mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold border border-border text-foreground hover:bg-secondary transition-colors"
+                      >
+                        <MessageSquare className="w-4 h-4" />
+                        Pošalji upit
+                      </Link>
                     )}
                   </div>
                 </div>
               ))}
             </div>
           )}
-
-          {/* CTA */}
-          <div className="mt-16 text-center">
-            <p className="text-muted-foreground mb-4">
-              Imate pitanje o nekoj usluzi?
-            </p>
-            <Link
-              href="/kontakt"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-full font-bold bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
-            >
-              Kontaktirajte nas
-            </Link>
-          </div>
         </div>
       </main>
       <Footer />

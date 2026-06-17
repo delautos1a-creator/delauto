@@ -6,7 +6,7 @@ export async function POST(request: Request) {
   let body: unknown;
   try { body = await request.json(); } catch { return NextResponse.json({ error: "Invalid request" }, { status: 400 }); }
 
-  const { vehicle_id, vehicle_name, customer_name, customer_email, customer_phone, preferred_date, preferred_time, message } =
+  const { service_id, service_name, customer_name, customer_email, customer_phone, preferred_date, preferred_time, message } =
     body as Record<string, unknown>;
 
   if (
@@ -35,60 +35,43 @@ export async function POST(request: Request) {
 
   const supabase = await createClient();
 
-  const { data: existingByEmail } = await supabase
-    .from("bookings").select("id").eq("customer_email", email)
-    .in("status", ["new", "confirmed"]).maybeSingle();
-
-  if (existingByEmail) {
-    return NextResponse.json(
-      { error: "Već imate aktivnu rezervaciju test vožnje. Svaka osoba može zakazati jednu test vožnju." },
-      { status: 409, headers: { "x-conflict": "email" } }
-    );
-  }
-
   const { data: existingSlot } = await supabase
-    .from("bookings").select("id").eq("preferred_date", preferred_date)
-    .eq("preferred_time", preferred_time).neq("status", "cancelled").maybeSingle();
+    .from("bookings")
+    .select("id")
+    .eq("preferred_date", preferred_date)
+    .eq("preferred_time", preferred_time)
+    .neq("status", "cancelled")
+    .maybeSingle();
 
-  if (existingSlot) {
+  if (existingSlot)
     return NextResponse.json({ error: "Ovaj termin je već rezervisan. Molimo odaberite drugi." }, { status: 409 });
-  }
 
   const { data: booking, error } = await supabase
     .from("bookings")
     .insert({
-      type: "test_drive",
-      vehicle_id: vehicle_id || null,
-      vehicle_name: typeof vehicle_name === "string" ? sanitize(vehicle_name) : null,
-      customer_name: name, customer_email: email, customer_phone: phone,
-      preferred_date, preferred_time,
+      type: "service",
+      service_id: service_id || null,
+      service_name: typeof service_name === "string" ? sanitize(service_name) : null,
+      customer_name: name,
+      customer_email: email,
+      customer_phone: phone,
+      preferred_date,
+      preferred_time,
       message: msg,
       status: "new",
     } as any)
-    .select().single();
+    .select()
+    .single();
 
   if (error) return NextResponse.json({ error: "Greška pri čuvanju rezervacije." }, { status: 500 });
 
   const { error: notifError } = await supabase.from("notifications").insert({
-    type: "booking",
-    title: `Nova test vožnja — ${customer_name}`,
-    body: `${preferred_date} u ${preferred_time}${vehicle_name ? ` · ${vehicle_name}` : ""}`,
+    type: "service_booking",
+    title: `Nova rezervacija usluge — ${service_name}`,
+    body: `${name} · ${preferred_date} u ${preferred_time}`,
     link: "/portal/rezervacije",
   } as any);
-  if (notifError) console.error("[bookings] notification insert error:", JSON.stringify(notifError));
+  if (notifError) console.error("[service-bookings] notification insert error:", JSON.stringify(notifError));
 
   return NextResponse.json({ success: true, id: (booking as any)?.id });
-}
-
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const date = searchParams.get("date");
-  if (!date) return NextResponse.json({ taken: [] });
-
-  const supabase = await createClient();
-  const { data } = await supabase.from("bookings").select("preferred_time")
-    .eq("preferred_date", date).neq("status", "cancelled");
-
-  const taken = (data ?? []).map((b: any) => b.preferred_time).filter(Boolean);
-  return NextResponse.json({ taken });
 }

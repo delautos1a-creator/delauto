@@ -5,7 +5,6 @@ import { useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Send, CheckCircle2 } from "lucide-react";
 
@@ -23,18 +22,19 @@ export default function ContactForm() {
     e.preventDefault();
     if (!name || !email || !message) return;
     setSending(true);
-    const supabase = createClient();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await supabase.from("inquiries").insert({
-      customer_name: name,
-      customer_email: email,
-      customer_phone: phone || null,
-      message,
-      vehicle_name: vehicleName || null,
-      status: "new",
-    } as any);
+    const res = await fetch("/api/inquiries", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        customer_name: name,
+        customer_email: email,
+        customer_phone: phone || null,
+        message,
+        vehicle_name: vehicleName || null,
+      }),
+    });
     setSending(false);
-    if (error) { toast.error("Greška pri slanju. Pokušajte ponovo."); return; }
+    if (!res.ok) { toast.error("Greška pri slanju. Pokušajte ponovo."); return; }
     setSent(true);
   };
 
@@ -45,7 +45,7 @@ export default function ContactForm() {
           <CheckCircle2 className="w-8 h-8 text-green-500" />
         </div>
         <h3 className="text-xl font-bold mb-2 text-foreground">Hvala na upitu!</h3>
-        <p className="text-muted-foreground">Javit ćemo vam se u najkraćem mogućem roku.</p>
+        <p className="text-muted-foreground">Kontaktiraćemo vas telefonom ili emailom i potvrditi sve detalje.</p>
       </div>
     );
   }
@@ -55,11 +55,18 @@ export default function ContactForm() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label>Ime i prezime *</Label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Vaše ime i prezime" required className="rounded-xl" />
+          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Vaše ime i prezime" required maxLength={120} className="rounded-xl" />
         </div>
         <div className="space-y-1.5">
           <Label>Broj telefona</Label>
-          <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+387 61 000 000" className="rounded-xl" />
+          <Input
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value.replace(/[^\d+\s\-().]/g, ""))}
+            placeholder="+387 61 000 000"
+            maxLength={25}
+            className="rounded-xl"
+          />
         </div>
       </div>
       <div className="space-y-1.5">

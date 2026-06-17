@@ -149,9 +149,11 @@ export interface Partner {
 
 export interface Booking {
   id: string;
-  type: "test_drive" | "showroom_viewing" | "video_viewing";
+  type: "test_drive" | "showroom_viewing" | "video_viewing" | "service";
   vehicle_id: string | null;
   vehicle_name: string | null;
+  service_id: string | null;
+  service_name: string | null;
   customer_name: string;
   customer_email: string;
   customer_phone: string;
@@ -190,6 +192,14 @@ export interface Service {
   price_from: number | null;
   price_unit: string;
   is_active: boolean;
+  is_schedulable: boolean;
+  schedule_from: string | null;
+  schedule_to: string | null;
+  schedule_time_from: string | null;
+  schedule_time_to: string | null;
+  schedule_weekdays: boolean;
+  schedule_saturday: boolean;
+  schedule_sunday: boolean;
   sort_order: number;
   created_at: string;
 }

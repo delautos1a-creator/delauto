@@ -4,8 +4,9 @@ import Navbar from "@/components/public/navbar";
 import Footer from "@/components/public/footer";
 import VehicleTabs from "@/components/public/vehicle-tabs";
 import PartnersRibbon from "@/components/public/partners-ribbon";
+import ServiceBookingButton from "@/components/public/service-booking-button";
 import type { Vehicle, Testimonial, NewsArticle, Service } from "@/types/database";
-import { Star, ArrowRight, ConciergeBell } from "lucide-react";
+import { Star, ArrowRight, ConciergeBell, MessageSquare } from "lucide-react";
 
 const TRUST_CARDS = [
   {
@@ -141,7 +142,7 @@ export default async function HomePage() {
 
             {/* Glassmorphism search/CTA bar */}
             <div
-              className="inline-flex flex-wrap gap-3 items-center p-2.5 rounded-2xl"
+              className="inline-flex gap-2 items-center p-2 rounded-2xl"
               style={{
                 background: "rgba(255,255,255,0.07)",
                 backdropFilter: "blur(14px)",
@@ -150,13 +151,13 @@ export default async function HomePage() {
             >
               <Link
                 href="/vozila"
-                className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90 bg-primary text-primary-foreground"
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-opacity hover:opacity-90 bg-primary text-primary-foreground whitespace-nowrap"
               >
-                Pretraži dostupna vozila
+                Pretraži vozila
               </Link>
               <Link
                 href="/kontakt"
-                className="px-5 py-3 rounded-xl text-sm font-semibold text-white/80 hover:text-white transition-colors"
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-white/80 hover:text-white transition-colors whitespace-nowrap"
               >
                 Kontaktirajte nas
               </Link>
@@ -223,7 +224,7 @@ export default async function HomePage() {
                 Izgradili smo povjerenje
               </h2>
               <p className="text-muted-foreground mt-3 max-w-xl mx-auto">
-                Zaradili smo povjerenje hiljada kupaca kroz transparentnost, kvalitet i izvrsnu uslugu.
+                Naš pristup zasnovan je na transparentnosti, kvalitetu i iskrenoj usluzi.
               </p>
             </div>
 
@@ -325,14 +326,37 @@ export default async function HomePage() {
                     <div className="p-5 flex-1 flex flex-col">
                       <h3 className="font-bold text-foreground mb-1">{s.name}</h3>
                       {s.description && (
-                        <p className="text-sm text-muted-foreground leading-relaxed flex-1 line-clamp-3">
-                          {s.description}
-                        </p>
+                        <div className="flex-1 overflow-hidden min-h-0 mb-1">
+                          <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4">
+                            {s.description}
+                          </p>
+                        </div>
                       )}
                       {s.price_from && (
                         <p className="mt-3 text-primary font-black">
                           od {s.price_from} {s.price_unit}
                         </p>
+                      )}
+                      {s.is_schedulable ? (
+                        <ServiceBookingButton
+                          serviceId={s.id}
+                          serviceName={s.name}
+                          scheduleFrom={s.schedule_from}
+                          scheduleTo={s.schedule_to}
+                          timeFrom={s.schedule_time_from?.slice(0, 5) ?? "09:00"}
+                          timeTo={s.schedule_time_to?.slice(0, 5) ?? "17:00"}
+                          allowWeekdays={s.schedule_weekdays ?? true}
+                          allowSaturday={s.schedule_saturday ?? false}
+                          allowSunday={s.schedule_sunday ?? false}
+                        />
+                      ) : (
+                        <Link
+                          href={`/kontakt?vozilo=${encodeURIComponent(s.name)}`}
+                          className="mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold border border-border text-foreground hover:bg-secondary transition-colors"
+                        >
+                          <MessageSquare className="w-4 h-4" />
+                          Pošalji upit
+                        </Link>
                       )}
                     </div>
                   </div>
