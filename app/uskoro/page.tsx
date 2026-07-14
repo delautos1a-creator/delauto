@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import Navbar from "@/components/public/navbar";
 import Footer from "@/components/public/footer";
+import PriceTag from "@/components/public/price-tag";
 import { Car, Clock, Truck } from "lucide-react";
 
 export const metadata = { title: "Uskoro — Del Auto" };
@@ -98,9 +99,12 @@ export default async function UscorPage() {
                         </p>
                       )}
 
-                      <p className="text-xl font-black text-primary">
-                        {v.price.toLocaleString("de-DE")} {v.currency}
-                      </p>
+                      <PriceTag
+                        price={v.price}
+                        discountPrice={v.discount_price}
+                        currency={v.currency}
+                        className="text-xl font-black text-primary"
+                      />
                     </div>
                   </div>
                 );

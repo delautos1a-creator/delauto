@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Vehicle } from "@/types/database";
+import PriceTag from "@/components/public/price-tag";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,6 +29,7 @@ const schema = z.object({
   fuel_type: z.string().min(1),
   transmission: z.string().min(1),
   price: z.coerce.number().min(0),
+  discount_price: z.coerce.number().min(0).optional(),
   currency: z.string().min(1),
   color: z.string().optional(),
   engine_size: z.string().optional(),
@@ -278,7 +280,7 @@ export default function AdminVehicles() {
   const openNew = () => {
     setEditing(null);
     setImages([]);
-    reset({ currency: "EUR", status: "available", is_featured: false, is_service_sale: false, features: "", mileage: 0, price: 0, year: new Date().getFullYear() });
+    reset({ currency: "EUR", status: "available", is_featured: false, is_service_sale: false, features: "", mileage: 0, price: 0, discount_price: undefined, year: new Date().getFullYear() });
     setOpen(true);
   };
 
@@ -288,7 +290,7 @@ export default function AdminVehicles() {
     reset({
       brand: v.brand, model: v.model, year: v.year, vin: v.vin ?? "",
       mileage: v.mileage, fuel_type: v.fuel_type, transmission: v.transmission,
-      price: v.price, currency: v.currency, color: v.color ?? "",
+      price: v.price, discount_price: v.discount_price ?? undefined, currency: v.currency, color: v.color ?? "",
       engine_size: v.engine_size ?? "", power: v.power ?? "",
       description: v.description, features: (v.features ?? []).join(", "),
       status: v.status, is_featured: v.is_featured, is_service_sale: v.is_service_sale ?? false,
@@ -303,6 +305,7 @@ export default function AdminVehicles() {
     const payload = {
       ...data,
       vin: data.vin || null,
+      discount_price: data.discount_price || null,
       color: data.color || null,
       engine_size: data.engine_size || null,
       power: data.power || null,
@@ -446,9 +449,14 @@ export default function AdminVehicles() {
                     )}
                   </div>
                 </div>
-                <p className="text-sm font-semibold text-primary mb-3">
-                  {v.price.toLocaleString()} {v.currency}
-                </p>
+                <div className="mb-3">
+                  <PriceTag
+                    price={v.price}
+                    discountPrice={v.discount_price}
+                    currency={v.currency}
+                    className="text-sm font-semibold text-primary"
+                  />
+                </div>
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" className="flex-1 gap-1" onClick={() => openEdit(v)}>
                     <Edit className="w-3 h-3" /> Uredi
@@ -524,10 +532,14 @@ export default function AdminVehicles() {
                 )} />
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="space-y-1">
                 <Label>Cijena *</Label>
                 <Input {...register("price")} type="number" />
+              </div>
+              <div className="space-y-1">
+                <Label>Akcijska cijena</Label>
+                <Input {...register("discount_price")} type="number" placeholder="Bez popusta" />
               </div>
               <div className="space-y-1">
                 <Label>Valuta</Label>

@@ -4,6 +4,7 @@ import Navbar from "@/components/public/navbar";
 import Footer from "@/components/public/footer";
 import ImageCarousel from "@/components/public/image-carousel";
 import VehicleBookingButton from "@/components/public/vehicle-booking-button";
+import PriceTag from "@/components/public/price-tag";
 import Link from "next/link";
 import type { Vehicle } from "@/types/database";
 import { ArrowLeft, MessageSquare, Gauge, Fuel, Settings2, Calendar, Palette, DoorOpen, Users, Car } from "lucide-react";
@@ -95,9 +96,14 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
               )}
 
               {v.status !== "sold" && (
-                <p className="text-4xl font-black text-primary mb-6">
-                  {v.price.toLocaleString("de-DE")} {v.currency}
-                </p>
+                <div className="mb-6">
+                  <PriceTag
+                    price={v.price}
+                    discountPrice={v.discount_price}
+                    currency={v.currency}
+                    className="text-4xl font-black text-primary"
+                  />
+                </div>
               )}
 
               {/* Specs grid */}

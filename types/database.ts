@@ -70,6 +70,7 @@ export interface Vehicle {
   fuel_type: "petrol" | "diesel" | "electric" | "hybrid" | "lpg";
   transmission: "manual" | "automatic";
   price: number;
+  discount_price: number | null;
   currency: string;
   color: string | null;
   engine_size: string | null;

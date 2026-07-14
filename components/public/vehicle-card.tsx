@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Vehicle } from "@/types/database";
 import { Fuel, Gauge, Calendar, Settings2, Car } from "lucide-react";
+import PriceTag from "@/components/public/price-tag";
 
 const FUEL_LABELS: Record<string, string> = {
   petrol: "Benzin",
@@ -99,9 +100,14 @@ export default function VehicleCard({
 
         {/* Price — hidden for sold */}
         {!isSold && (
-          <p className="text-2xl font-black mb-3 text-primary">
-            {v.price.toLocaleString("de-DE")} {v.currency}
-          </p>
+          <div className="mb-3">
+            <PriceTag
+              price={v.price}
+              discountPrice={v.discount_price}
+              currency={v.currency}
+              className="text-2xl font-black text-primary"
+            />
+          </div>
         )}
         {isSold && <div className="mb-3" />}
 

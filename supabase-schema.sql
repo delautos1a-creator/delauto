@@ -11,6 +11,7 @@ create table if not exists vehicles (
   model text not null,
   year integer not null,
   price numeric not null,
+  discount_price numeric,
   currency text not null default 'EUR',
   mileage integer not null default 0,
   fuel_type text not null default 'petrol',
